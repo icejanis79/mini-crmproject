@@ -68,7 +68,7 @@ export default function QuotationPage() {
 
   // Form State
   const [formData, setFormData] = useState({
-    qchNumber: 'QCG(เช็คลำดับ)-F69',
+    qchNumber: 'QCH',
     date: new Date().toLocaleDateString('th-TH'),
     company: '',
     taxId: '',
@@ -112,6 +112,14 @@ export default function QuotationPage() {
   };
 
   const openDriveModal = () => {
+    if (!formData.qchNumber || formData.qchNumber === 'QCH') {
+      alert('กรุณากรอกเลขที่เอกสาร (QCH)');
+      return;
+    }
+    if (!formData.company) {
+      alert('กรุณากรอกชื่อลูกค้า');
+      return;
+    }
     setShowDriveModal(true);
   };
 
@@ -131,6 +139,7 @@ export default function QuotationPage() {
 
   const confirmSaveToDrive = async () => {
     setLoading(true);
+    const isoDate = new Date().toISOString().split('T')[0];
     
     // Save to Dashboard DB as pending
     try {
@@ -144,7 +153,29 @@ export default function QuotationPage() {
             company: formData.company,
             amount: grandTotal,
             status: 'pending',
-            date: new Date().toISOString().split('T')[0]
+            date: isoDate
+          }
+        })
+      });
+    } catch (e) {
+      console.error(e);
+    }
+
+    // Save to Customer Base
+    try {
+      await fetch('/api/customers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'UPSERT_CUSTOMER',
+          payload: {
+            company: formData.company,
+            contact: formData.contact,
+            email: formData.email,
+            phone: formData.phone,
+            latestQuote: formData.qchNumber,
+            latestDate: isoDate,
+            status: 'รอติดตาม'
           }
         })
       });

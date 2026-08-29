@@ -10,7 +10,7 @@ export async function GET() {
     
     const response = await sheets.spreadsheets.values.get({
       spreadsheetId: SPREADSHEET_ID,
-      range: `${TAB_NAME}!A:H`,
+      range: `${TAB_NAME}!A:K`,
     });
 
     const rows = response.data.values || [];
@@ -33,5 +33,68 @@ export async function GET() {
     return NextResponse.json(customers);
   } catch (err: any) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { action, payload } = await request.json();
+    const sheets = await getGoogleSheetsClient();
+
+    if (action === 'UPSERT_CUSTOMER') {
+      // 1. Fetch current rows to check if company exists
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId: SPREADSHEET_ID,
+        range: `${TAB_NAME}!A:K`,
+      });
+      
+      const rows = response.data.values || [];
+      const companyIndex = rows.findIndex(row => row[1] === payload.company);
+
+      if (companyIndex !== -1) {
+        // Exists: Update Latest Quote, Date, and increment Total Quotes
+        const actualRow = companyIndex + 1; // 1-indexed
+        const currentTotal = parseInt(rows[companyIndex][8] || '0', 10);
+        
+        await sheets.spreadsheets.values.update({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `${TAB_NAME}!G${actualRow}:J${actualRow}`, // G=Latest Quote, H=Date, I=Total Quotes, J=Status
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[
+              payload.latestQuote,
+              payload.latestDate,
+              isNaN(currentTotal) ? 1 : currentTotal + 1,
+              payload.status || 'รอติดตาม'
+            ]]
+          }
+        });
+      } else {
+        // Doesn't exist: Append new customer
+        await sheets.spreadsheets.values.append({
+          spreadsheetId: SPREADSHEET_ID,
+          range: `${TAB_NAME}!A:K`,
+          valueInputOption: 'USER_ENTERED',
+          requestBody: {
+            values: [[
+              '', // CUS Code
+              payload.company,
+              payload.contact || '-',
+              payload.email || '',
+              payload.phone || '',
+              'จณิสตา วิจิตร (Janista)', // Sales Rep
+              payload.latestQuote,
+              payload.latestDate,
+              1, // Total quotes
+              payload.status || 'รอติดตาม',
+              '' // Revise Notes
+            ]]
+          }
+        });
+      }
+    }
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    return NextResponse.json({ success: false, error: String(err) }, { status: 500 });
   }
 }

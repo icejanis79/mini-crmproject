@@ -1,0 +1,29 @@
+{
+  "quotes": [
+    {
+      "id": "QCH408-F69",
+      "company": "บริษัท สมาร์ท โซลูชั่นส์",
+      "amount": 45000,
+      "status": "pending",
+      "date": "2026-08-28"
+    },
+    {
+      "id": "QCH407-F69",
+      "company": "บริษัท เอบีซี จำกัด",
+      "amount": 32000,
+      "status": "closed",
+      "paymentMethod": "credit",
+      "creditDays": 30,
+      "date": "2026-08-25"
+    },
+    {
+      "id": "QCH406-F69",
+      "company": "หจก. เอ็นจิเนียริ่ง",
+      "amount": 15000,
+      "status": "closed",
+      "paymentMethod": "cash",
+      "date": "2026-08-10"
+    }
+  ],
+  "monthlyGoal": 100000
+}

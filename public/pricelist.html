@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ค้นราคาสินค้า</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap');
+:root{
+  --bg:#f4f6f5;
+  --card:#ffffff;
+  --line:#e1e6e2;
+  --ink:#12201c;
+  --ink-dim:#68766f;
+  --petrol:#0e5c58;
+  --petrol-dim:#e4f0ee;
+  --tag:#c65d1e;
+  --tag-dim:#fdeee2;
+  --com:#1f6f4a;
+  --com-dim:#e7f4ec;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Inter',-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+  min-height:100vh;
+  padding-bottom:40px;
+}
+header{
+  position:sticky;top:0;z-index:10;
+  background:var(--bg);
+  padding:14px 14px 10px;
+  border-bottom:1px solid var(--line);
+}
+.title-row{
+  display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;
+}
+.title-row h1{
+  font-size:1.05rem;letter-spacing:-.01em;color:var(--ink);
+  font-weight:800;
+}
+.title-row h1 span{color:var(--petrol);}
+#count{font-size:.72rem;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-weight:500;}
+.search-wrap{position:relative;}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none;}
+#search{
+  width:100%;padding:13px 14px 13px 40px;font-size:1.05rem;
+  background:var(--card);border:2px solid var(--line);
+  color:var(--ink);border-radius:10px;outline:none;
+  font-family:'Inter',sans-serif;
+}
+#search::placeholder{color:#a3aca6;}
+#search:focus{border-color:var(--petrol);}
+.cats{
+  display:flex;gap:6px;overflow-x:auto;margin-top:10px;padding-bottom:2px;
+  -webkit-overflow-scrolling:touch;
+}
+.cats::-webkit-scrollbar{display:none;}
+.cat-btn{
+  flex:0 0 auto;background:var(--card);border:1px solid var(--line);
+  color:var(--ink-dim);padding:6px 12px;border-radius:20px;font-size:.72rem;
+  white-space:nowrap;cursor:pointer;font-weight:600;
+}
+.cat-btn.active{border-color:var(--petrol);color:#fff;background:var(--petrol);}
+ 
+main{padding:10px 12px 4px;max-width:720px;margin:0 auto;}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:13px 14px;margin-bottom:9px;
+  display:flex;justify-content:space-between;gap:10px;align-items:flex-start;
+}
+.card-main{flex:1;min-width:0;}
+.card .cat-label{
+  display:inline-block;font-size:.62rem;color:var(--petrol);text-transform:uppercase;
+  letter-spacing:.04em;font-weight:700;margin-bottom:4px;
+  background:var(--petrol-dim);padding:2px 7px;border-radius:5px;
+}
+.card .code{color:var(--ink-dim);font-family:'JetBrains Mono',monospace;font-weight:500;}
+.card .name{font-size:.97rem;font-weight:600;line-height:1.35;color:var(--ink);}
+.card .meta{
+  color:var(--ink-dim);font-size:.8rem;margin-top:3px;font-family:'JetBrains Mono',monospace;
+}
+.tiers{display:flex;gap:5px;margin-top:8px;flex-wrap:wrap;}
+.tier{
+  background:var(--com-dim);color:var(--com);
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;font-weight:500;
+  padding:2px 6px;border-radius:5px;
+}
+.tier b{font-weight:700;}
+.note{margin-top:6px;color:var(--tag);font-size:.78rem;background:var(--tag-dim);padding:4px 8px;border-radius:6px;}
+ 
+.tag{
+  flex:0 0 auto;text-align:right;padding-top:2px;
+}
+.tag .old{
+  display:block;font-size:.72rem;color:var(--ink-dim);text-decoration:line-through;
+  font-family:'JetBrains Mono',monospace;margin-bottom:1px;
+}
+.tag .price{
+  display:block;font-size:1.3rem;font-weight:800;color:var(--tag);
+  font-family:'JetBrains Mono',monospace;white-space:nowrap;line-height:1.1;
+}
+.tag .missing{font-size:.72rem;color:var(--ink-dim);font-weight:600;max-width:110px;}
+ 
+.empty{
+  text-align:center;color:var(--ink-dim);padding:60px 20px;font-size:.9rem;
+}
+.empty b{color:var(--petrol);}
+.status{font-size:.72rem;color:var(--com);font-weight:600;height:14px;margin-top:2px;}
+.reset-link{
+  background:none;border:none;color:var(--ink-dim);font-size:.68rem;text-decoration:underline;
+  padding:0;margin-top:2px;cursor:pointer;font-family:'Inter',sans-serif;
+}
+.reset-link:active{color:var(--tag);}
+ 
+.tabs{display:flex;gap:6px;margin-top:10px;}
+.tab-btn{
+  flex:1;background:var(--card);border:1px solid var(--line);color:var(--ink-dim);
+  padding:9px 6px;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;
+}
+.tab-btn.active{background:var(--petrol);border-color:var(--petrol);color:#fff;}
+#search-view{margin-top:10px;}
+ 
+#calc-view{display:none;padding:12px;max-width:720px;margin:0 auto;}
+#calc-view.open{display:block;}
+.calc-card{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;
+  padding:16px;margin-bottom:12px;
+}
+.calc-title{font-size:.95rem;font-weight:800;color:var(--ink);margin-bottom:12px;}
+.calc-label{
+  display:flex;flex-direction:column;gap:5px;font-size:.78rem;color:var(--ink-dim);
+  font-weight:600;margin-bottom:12px;
+}
+.calc-label select, .calc-label input{
+  font-size:.95rem;padding:11px;border:1.5px solid var(--line);border-radius:8px;
+  color:var(--ink);font-family:'Inter',sans-serif;background:var(--bg);
+}
+.calc-label select:focus, .calc-label input:focus{outline:none;border-color:var(--petrol);}
+#calc-result{margin-top:6px;}
+.calc-out{
+  background:var(--petrol-dim);border-radius:10px;padding:14px;margin-top:6px;
+}
+.calc-out .line{display:flex;justify-content:space-between;font-size:.85rem;color:var(--ink);padding:4px 0;}
+.calc-out .line b{font-family:'JetBrains Mono',monospace;color:var(--petrol);font-size:1rem;}
+.calc-out .line.total b{color:var(--tag);font-size:1.15rem;}
+.calc-warn{font-size:.78rem;color:var(--tag);background:var(--tag-dim);padding:8px 10px;border-radius:8px;margin-top:8px;}
+ 
+.calc-cov-head{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:10px;}
+.calc-hint{font-size:.68rem;color:var(--ink-dim);}
+.cov-row{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 0;border-bottom:1px solid var(--line);
+}
+.cov-row:last-child{border-bottom:none;}
+.cov-row .cov-name{font-size:.85rem;font-weight:600;color:var(--ink);}
+.cov-row .cov-unit{font-size:.7rem;color:var(--ink-dim);}
+.cov-row input{
+  width:78px;text-align:right;padding:7px 8px;border:1.5px solid var(--line);border-radius:7px;
+  font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--ink);background:var(--bg);
+}
+.cov-row input:focus{outline:none;border-color:var(--petrol);}
+ 
+.tag-col{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.edit-btn{
+  border:1px solid var(--line);background:var(--card);color:var(--ink-dim);
+  font-size:.68rem;font-weight:600;padding:3px 9px;border-radius:20px;cursor:pointer;
+}
+.edit-btn:active{background:var(--petrol-dim);color:var(--petrol);}
+ 
+#fab{
+  position:fixed;right:18px;bottom:22px;z-index:20;
+  width:54px;height:54px;border-radius:50%;border:none;
+  background:var(--petrol);color:#fff;font-size:1.7rem;font-weight:400;
+  box-shadow:0 6px 18px rgba(14,92,88,.35);cursor:pointer;line-height:0;
+}
+#fab:active{transform:scale(.95);}
+ 
+#modal{
+  position:fixed;inset:0;z-index:30;display:none;
+}
+#modal.open{display:block;}
+#modal-backdrop{position:absolute;inset:0;background:rgba(18,32,28,.45);}
+.modal-sheet{
+  position:absolute;left:0;right:0;bottom:0;max-height:88vh;overflow-y:auto;
+  background:var(--card);border-radius:18px 18px 0 0;padding:18px 18px 24px;
+  box-shadow:0 -8px 30px rgba(0,0,0,.2);
+}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.modal-head h2{font-size:1.05rem;font-weight:800;color:var(--ink);}
+.icon-btn{border:none;background:var(--bg);color:var(--ink-dim);width:30px;height:30px;border-radius:50%;font-size:1rem;cursor:pointer;}
+#pform{display:flex;flex-direction:column;gap:11px;}
+#pform label{font-size:.75rem;color:var(--ink-dim);font-weight:600;display:flex;flex-direction:column;gap:4px;}
+#pform input{
+  font-size:.95rem;padding:10px 11px;border:1.5px solid var(--line);border-radius:8px;
+  color:var(--ink);font-family:'Inter',sans-serif;background:var(--bg);
+}
+#pform input:focus{outline:none;border-color:var(--petrol);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.row4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;}
+.row4 input{padding:9px 6px;font-size:.85rem;}
+.modal-actions{display:flex;gap:10px;margin-top:6px;}
+.btn-save{
+  flex:1;background:var(--petrol);color:#fff;border:none;padding:13px;border-radius:10px;
+  font-size:1rem;font-weight:700;cursor:pointer;
+}
+.btn-delete{
+  background:var(--tag-dim);color:var(--tag);border:none;padding:13px 16px;border-radius:10px;
+  font-size:.9rem;font-weight:700;cursor:pointer;display:none;
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row"><h1><span>฿</span> ค้นราคาสินค้า</h1><span id="count"></span></div>
+  <div id="status" class="status"></div>
+  <button id="reset-link" class="reset-link">โหลดราคาล่าสุดทั้งหมดใหม่ (รีเซ็ต)</button>
+  <div class="tabs">
+    <button class="tab-btn active" id="tab-search">ค้นราคาสินค้า</button>
+    <button class="tab-btn" id="tab-calc">คำนวณพื้นที่ท่อ</button>
+  </div>
+  <div id="search-view">
+    <div class="search-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#12201c" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="search" type="text" placeholder="พิมพ์ชื่อสินค้า / รหัส / ขนาด..." autocomplete="off" autofocus>
+    </div>
+    <div class="cats" id="cats"></div>
+  </div>
+</header>
+<main id="results"></main>
+ 
+<div id="calc-view">
+  <div class="calc-card">
+    <h2 class="calc-title">คำนวณพื้นที่ท่อ / จำนวนที่ต้องใช้</h2>
+    <label class="calc-label">ยี่ห้อ/ชนิดสินค้า
+      <select id="calc-brand"></select>
+    </label>
+    <label class="calc-label" id="calc-size-wrap">ขนาด
+      <select id="calc-size"></select>
+    </label>
+    <div class="row2">
+      <label class="calc-label">ขนาดท่อ (นิ้ว)
+        <select id="calc-pipe-size"></select>
+      </label>
+      <label class="calc-label">ความยาวท่อ (เมตร)
+        <input id="calc-length" type="number" inputmode="decimal" placeholder="เช่น 10">
+      </label>
+    </div>
+    <div id="calc-result"></div>
+  </div>
+ 
+  <div class="calc-card">
+    <div class="calc-cov-head">
+      <h2 class="calc-title">ตารางพื้นที่คุ้มครองต่อหน่วย (ตรม.)</h2>
+      <span class="calc-hint">แก้ตัวเลขได้ถ้าค่าเปลี่ยน — บันทึกอัตโนมัติ</span>
+    </div>
+    <div id="coverage-table"></div>
+  </div>
+</div>
+ 
+<button id="fab" title="เพิ่มสินค้าใหม่">+</button>
+ 
+<div id="modal">
+ 
+  <div id="modal-backdrop"></div>
+  <div class="modal-sheet">
+    <div class="modal-head">
+      <h2 id="modal-title">เพิ่มสินค้าใหม่</h2>
+      <button type="button" id="cancel-btn" class="icon-btn">✕</button>
+    </div>
+    <form id="pform">
+      <datalist id="cat-options"></datalist>
+      <label>หมวดหมู่<input name="cat" list="cat-options" placeholder="เช่น CRC, LUKO"></label>
+      <label>ชื่อสินค้า *<input name="n" required placeholder="ชื่อสินค้า"></label>
+      <label>ขนาด/แพ็ค<input name="p" placeholder="เช่น 400 ml/Can"></label>
+      <label>รหัสสินค้า<input name="code" placeholder="รหัส (ถ้ามี)"></label>
+      <div class="row2">
+        <label>ราคาเก่า<input name="old" type="number" inputmode="decimal" placeholder="ไม่บังคับ"></label>
+        <label>ราคาใหม่<input name="price" type="number" inputmode="decimal" placeholder="ราคาขาย"></label>
+      </div>
+      <div class="row4">
+        <label>คอม 10%<input name="c10" type="number" inputmode="decimal"></label>
+        <label>คอม 7%<input name="c7" type="number" inputmode="decimal"></label>
+        <label>คอม 5%<input name="c5" type="number" inputmode="decimal"></label>
+        <label>คอม 3%<input name="c3" type="number" inputmode="decimal"></label>
+      </div>
+      <label>หมายเหตุ<input name="note" placeholder="ไม่บังคับ"></label>
+      <div class="modal-actions">
+        <button type="button" id="delete-btn" class="btn-delete">ลบสินค้านี้</button>
+        <button type="submit" class="btn-save">บันทึก</button>
+      </div>
+    </form>
+  </div>
+</div>
+ 
+<script>
+const SEED_DATA = [
+/* ===== LUKO / SPARK / WESSBOND / COOLMAN (1/4/69) ===== */
+{cat:"LUKO/SPARK",n:"น้ำยา DEGRESER B (สีใส)",p:"20 ลิตร/ถัง",old:3500,price:3700,c10:3330,c7:3145,c5:2960,c3:2775},
+{cat:"LUKO/SPARK",n:"น้ำยาต๊าปเกลียวน้ำมัน",p:"20 ลิตร/ถัง",old:3200,price:4000,c10:3600,c7:3400,c5:3200,c3:3000},
+{cat:"LUKO/SPARK",n:"น้ำยาต๊าปเกลียวสีใส",p:"20 ลิตร/ถัง",old:3200,price:4000,c10:3600,c7:3400,c5:3200,c3:3000},
+{cat:"LUKO/SPARK",n:"น้ำยาต๊าปเกลียวน้ำมนั(มัน)",p:"20 ลิตร/ถัง",old:3200,price:4000,c10:3600,c7:3400,c5:3200,c3:3000},
+{cat:"LUKO/SPARK",n:"น้ำยาล้างมอเตอร์ (แห้งเร็ว)",p:"25 Kg./ถัง",old:5000,price:5500,c10:4950,c7:4675,c5:4400,c3:4125},
+{cat:"LUKO/SPARK",n:"น้ำยาล้างมอเตอร์ (แห้งช้า)",p:"20 ลิตร/ถัง",old:4000,price:4500,c10:4050,c7:3825,c5:3600,c3:3375},
+{cat:"LUKO/SPARK",n:"ACETONE อะซีโทน",p:"20 ลิตร/ถัง",old:2500,price:3000,c10:2700,c7:2550,c5:2400,c3:2250},
+{cat:"LUKO/SPARK",n:"น้ำยา DEGRESER C",p:"20 ลิตร/ถัง",old:3500,price:4000,c10:3600,c7:3400,c5:3200,c3:3000},
+{cat:"LUKO/SPARK",n:"Spark 709 Contact (ติดไฟ)",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"Spark 961 (สเปรย์ไล่ความชื้น)",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"Spark Insulating Varnish 801 Clear",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"Spark Insulating Varnish 801 Red",p:"16 oz./Can",old:280,price:290,c10:261,c7:246,c5:232,c3:217},
+{cat:"LUKO/SPARK",n:"Spark Foam",p:"16 oz./Can",old:280,price:290,c10:261,c7:246,c5:232,c3:217},
+{cat:"LUKO/SPARK",n:"Wessbond Contact Cleaner (ไม่ติดไฟ)",p:"16 oz./Can",old:360,price:370,c10:333,c7:314,c5:296,c3:277},
+{cat:"LUKO/SPARK",n:"Wessbond Contact Cleaner (ติดไฟ)",p:"16 oz./Can",old:160,price:170,c10:153,c7:144,c5:136,c3:127},
+{cat:"LUKO/SPARK",n:"Wessbond 777",p:"16 oz./Can",old:100,price:110,c10:99,c7:93,c5:88,c3:82},
+{cat:"LUKO/SPARK",n:"Coolman Dust Bowl Spray Cap",p:"380 ml./Can",old:490,price:650,c10:585,c7:552,c5:520,c3:480},
+{cat:"LUKO/SPARK",n:"LUKO 301 Red Insulating Varnish",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO 302 Clear Insulating Varnish",p:"16 oz./Can",old:280,price:290,c10:261,c7:246,c5:232,c3:217},
+{cat:"LUKO/SPARK",n:"LUKO 303 Contact Cleaner (ติดไฟ)",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO 304 Electric Motor Cleaner",p:"16 oz./Can",old:320,price:330,c10:297,c7:280,c5:264,c3:247},
+{cat:"LUKO/SPARK",n:"LUKO 305 Freeze Spray",p:"16 oz./Can",old:350,price:360,c10:324,c7:306,c5:288,c3:270},
+{cat:"LUKO/SPARK",n:"LUKO 307 Battery Cleaner",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO 308 Anti Static",p:"16 oz./Can",old:300,price:310,c10:279,c7:263,c5:248,c3:232},
+{cat:"LUKO/SPARK",n:"LUKO 309 Demoisturant",p:"16 oz./Can",old:220,price:230,c10:207,c7:195,c5:184,c3:172},
+{cat:"LUKO/SPARK",n:"LUKO 310 Anti Spatter",p:"16 oz./Can",old:320,price:330,c10:297,c7:280,c5:264,c3:247},
+{cat:"LUKO/SPARK",n:"LUKO 311 Moly Dry",p:"16 oz./Can",old:350,price:360,c10:324,c7:306,c5:288,c3:270},
+{cat:"LUKO/SPARK",n:"LUKO 314 Open Gear",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO Oven Chain Oil",p:"16 oz./Can",old:360,price:360,c10:324,c7:306,c5:288,c3:270},
+{cat:"LUKO/SPARK",n:"LUKO 315 Penetrating Oil",p:"16 oz./Can",old:200,price:210,c10:189,c7:178,c5:168,c3:157},
+{cat:"LUKO/SPARK",n:"LUKO 316 Silicone Lubricant",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO 317 Copper Spray",p:"16 oz./Can",old:300,price:310,c10:279,c7:263,c5:248,c3:232},
+{cat:"LUKO/SPARK",n:"LUKO 318 Cutting Oil",p:"16 oz./Can",old:280,price:290,c10:261,c7:246,c5:232,c3:217},
+{cat:"LUKO/SPARK",n:"LUKO 320 Lithium Grease",p:"16 oz./Can",old:280,price:290,c10:261,c7:246,c5:232,c3:217},
+{cat:"LUKO/SPARK",n:"LUKO 323 Degreaser A&B ล้างโมลด์",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO 326 Cold Galvanize",p:"16 oz./Can",old:370,price:380,c10:342,c7:323,c5:304,c3:285},
+{cat:"LUKO/SPARK",n:"LUKO 328 Rust Inhibitor",p:"16 oz./Can",old:300,price:310,c10:279,c7:263,c5:248,c3:232},
+{cat:"LUKO/SPARK",n:"LUKO 330 Belt Dressing",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO 335 White Lithium",p:"16 oz./Can",old:300,price:310,c10:279,c7:263,c5:248,c3:232},
+{cat:"LUKO/SPARK",n:"สเปรย์จาระบีเซนเทติกส์",p:"16 oz./Can",old:360,price:370,c10:333,c7:314,c5:296,c3:277},
+{cat:"LUKO/SPARK",n:"ชุดเช็ครอยร้าว ยี่ห้อ LUKO",p:"16 oz./Can",old:1500,price:1600,c10:1440,c7:1360,c5:1280,c3:1200},
+{cat:"LUKO/SPARK",n:"LUKO สเปรย์ล็อกปะเก็น",p:"16 oz./Can",old:250,price:260,c10:234,c7:221,c5:208,c3:195},
+{cat:"LUKO/SPARK",n:"LUKO สเปรย์ลม",p:"16 oz./Can",old:390,price:400,c10:360,c7:340,c5:320,c3:300},
+{cat:"LUKO/SPARK",n:"LUKO 331 สเปรย์ชุดเช็ครอยร้าว-A",p:"16 oz./Can",old:500,price:510,c10:459,c7:433,c5:408,c3:382},
+{cat:"LUKO/SPARK",n:"LUKO 332 สเปรย์ชุดเช็ครอยร้าว-B",p:"16 oz./Can",old:550,price:560,c10:504,c7:476,c5:440,c3:420},
+{cat:"LUKO/SPARK",n:"LUKO 333 สเปรย์ชุดเช็ครอยร้าว-C",p:"16 oz./Can",old:500,price:510,c10:459,c7:433,c5:408,c3:382},
+{cat:"LUKO/SPARK",n:"LUKO จาระบีอลูมิเนียมสีแดง",p:"16 oz./Can",old:280,price:290,c10:261,c7:246,c5:232,c3:217},
+{cat:"LUKO/SPARK",n:"3DI (ACRYLIC) หลอดน้ำเงิน",p:"450 g./Pcs (1,440/Box)",old:1440,price:1464,c10:1317,c7:1244,c5:1171,c3:1098,note:"ราคาต่อ Box"},
+{cat:"LUKO/SPARK",n:"3DI (ACRYLIC) หลอดแดง",p:"450 g./Pcs (1,200/Box)",old:1200,price:1224,c10:1101,c7:1020,c5:979,c3:918,note:"ราคาต่อ Box"},
+ 
+/* ===== DENSO / DENSYL (เริ่ม 1/8/69 - จากภาพ) ===== */
+{cat:"DENSO/DENSYL",n:"DENSO S/A PVC YELLOW",p:"2\"X33m/Roll",old:1000,price:1600},
+{cat:"DENSO/DENSYL",n:"DENSO TAPE",p:"2\"X10m/Roll",old:1000,price:1000},
+{cat:"DENSO/DENSYL",n:"DENSO TAPE",p:"4\"X10m/Roll",old:1200,price:1400},
+{cat:"DENSO/DENSYL",n:"DENSO TAPE",p:"6\"X10m/Roll",old:1400,price:2000},
+{cat:"DENSO/DENSYL",n:"DENSYL TAPE",p:"2\"X10m/Roll",old:1000,price:1000},
+{cat:"DENSO/DENSYL",n:"DENSYL TAPE",p:"4\"X10m/Roll",old:1200,price:1400},
+{cat:"DENSO/DENSYL",n:"DENSYL TAPE",p:"12\"X10m/Roll",old:2400,price:4000},
+{cat:"DENSO/DENSYL",n:"Denso S 105 Paste (7.5 ตรม./กระป๋อง)",p:"2.5 Kg./Gal",old:2000,price:2800},
+{cat:"DENSO/DENSYL",n:"Densyl Mastic (18 Kg./Box)",p:"18 Kg./Box",old:8500,price:12500},
+ 
+/* ===== EPIGEN ===== */
+{cat:"EPIGEN",n:"EPIGEN 806 BR",p:"12 KG./Set",price:30000,c10:27000,c7:25500,c5:24000},
+{cat:"EPIGEN",n:"EPIGEN 806 BR (1/4/2569)",p:"12 KG./Set",price:32000,c10:28800,c7:27200,c5:25600},
+{cat:"EPIGEN",n:"EPIGEN 806 BR",p:"2 KG./Set",price:5000,c10:4500,c7:4250,c5:4000},
+{cat:"EPIGEN",n:"EPIGEN 806 BR (1/4/2569)",p:"2 KG./Set",price:5500,c10:4950,c7:4675,c5:4400},
+{cat:"EPIGEN",n:"EPIGEN 806 MG",p:"3 KG./Set",price:7500,c10:6750,c7:6375,c5:6000},
+{cat:"EPIGEN",n:"EPIGEN XD 008 BR",p:"1.5 KG./Set",price:3200,c10:2880,c7:2720,c5:2560},
+{cat:"EPIGEN",n:"EPIGEN XD 008",p:"3 KG./Set",price:3800,c10:3420,c7:3230,c5:3040},
+{cat:"EPIGEN",n:"EPIGEN 3523 WearFlex",p:"13.5 KG./Set",price:28690,c10:25821,c7:24386,c5:22952},
+{cat:"EPIGEN",n:"EPIGEN 3523 WearFlex",p:"1 Kg.",price:2126,c10:1913,c7:1807,c5:1700},
+{cat:"EPIGEN",n:"EPIGEN 3773 (18:1)",p:"7 KG./Set",price:15400,c10:13860,c7:13090,c5:12320},
+{cat:"EPIGEN",n:"EPIGEN 1369",p:"12 KG./Set",price:22500,c10:20250,c7:19125,c5:18000},
+{cat:"EPIGEN",n:"EPIGEN 1369 (1/4/2569)",p:"12 KG./Set",price:25000,c10:22500,c7:21250,c5:20000},
+{cat:"EPIGEN",n:"EPIGEN 1369",p:"6 KG./Set",price:11250,c10:10125,c7:9562,c5:9000},
+{cat:"EPIGEN",n:"EPIGEN 1369 (1/4/2569)",p:"6 KG./Set",price:12500,c10:11250,c7:10625,c5:10000},
+{cat:"EPIGEN",n:"EPIGEN 1369",p:"1 KG./Set",price:1875,c10:1687,c7:1593,c5:1500},
+{cat:"EPIGEN",n:"EPIGEN 1369 (1/4/2569)",p:"1 KG./Set",price:2100,c10:1890,c7:1785,c5:1680},
+{cat:"EPIGEN",n:"EPIGEN XD 004",p:"26 KG./Set",price:52000,c10:46800,c7:44200,c5:41600},
+{cat:"EPIGEN",n:"EPIGEN XD 005 FL",p:"12 KG./Set",price:37500,c10:33750,c7:31875,c5:30000},
+{cat:"EPIGEN",n:"EPIGEN XD 005 FL",p:"1 KG./Set",price:3125,c10:2812,c7:2656,c5:2500},
+{cat:"EPIGEN",n:"EPIGEN XD 005 SN",p:"12.5 KG./Set",price:43750,c10:39375,c7:37188,c5:35000},
+{cat:"EPIGEN",n:"EPIGEN XD 005 SN",p:"6.25 Kg./Set",price:21875,c10:19687,c7:18539,c5:17500},
+{cat:"EPIGEN",n:"EPIGEN XD 005 SN",p:"1 Kg.",price:3500,c10:3150,c7:2975,c5:2800},
+{cat:"EPIGEN",n:"EPIGEN 4029 FC",p:"25 Kg./Set",price:78125,c10:70312,c7:66406,c5:62500},
+{cat:"EPIGEN",n:"EPIGEN 4029 FC",p:"12.50 Kg./Set",price:39062,c10:35155,c7:33202,c5:31249},
+{cat:"EPIGEN",n:"EPIGEN 4029 FC",p:"6.65 Kg./Set",price:20781,c10:18702,c7:17663,c5:16624},
+{cat:"EPIGEN",n:"EPIGEN 4029 FC",p:"1 Kg./Set",price:3125,c10:2812,c7:2656,c5:2500},
+{cat:"EPIGEN",n:"EPIGEN 4040 FC",p:"26.6 Kg./Set",price:83125,c10:74812,c7:70656,c5:66500},
+{cat:"EPIGEN",n:"EPIGEN 4040 FC",p:"13.30 Kg./Set",price:41562,c10:37405,c7:35327,c5:33249},
+{cat:"EPIGEN",n:"EPIGEN 4040 FC",p:"6.65 Kg./Set",price:20781,c10:18702,c7:17663,c5:16624},
+{cat:"EPIGEN",n:"EPIGEN 4040 FC",p:"1 Kg./Set",price:3125,c10:2812,c7:2656,c5:2500},
+{cat:"EPIGEN",n:"EPIGEN 1311",p:"9 Kg./Set",price:11000,c10:9900,c7:9350,c5:8800},
+{cat:"EPIGEN",n:"EPIGEN 1412",p:"1.5 KG./Set",price:2000,c10:1800,c7:1700,c5:1600},
+{cat:"EPIGEN",n:"EPIGEN 1412",p:"9 KG./Set",price:13500,c10:12150,c7:11475,c5:10800},
+{cat:"EPIGEN",n:"EPIGEN 3321",p:"6 KG./Set",price:9500,c10:8550,c7:8075,c5:7600},
+{cat:"EPIGEN",n:"EPIGEN FC 3",p:"1.5 KG./Set",price:4250,c10:3825,c7:3612,c5:3400},
+{cat:"EPIGEN",n:"EPIGEN FC 3 (1/4/69)",p:"1.5 KG./Set",price:4500,c10:4050,c7:3825,c5:3600},
+{cat:"EPIGEN",n:"EPIGEN FC 1",p:"1.5 KG./Set",price:4250,c10:3825,c7:3612,c5:3400},
+{cat:"EPIGEN",n:"EPIGEN FC 1 (1/4/69)",p:"1.5 KG./Set",price:4500,c10:4050,c7:3825,c5:3600},
+{cat:"EPIGEN",n:"EPIGEN KIS",p:"20 KG./Set",price:15000,c10:13500,c7:12750,c5:12000},
+{cat:"EPIGEN",n:"EPIGEN FABRIC KIS",p:"1.5m*1m",price:2000,c10:1800,c7:1700,c5:1600},
+{cat:"EPIGEN",n:"EPIGEN T20P",p:"20 Kg./Gal",price:16000,c10:14400,c7:13600,c5:12800},
+{cat:"EPIGEN",n:"EPIGEN 2550",p:"8.25 Kg./Set",price:16000,c10:14400,c7:13600,c5:12800},
+ 
+/* ===== SPANJAARD ===== */
+{cat:"SPANJAARD",n:"SPANJAARD Cold Zinc Galvanising Spray",code:"50501600",p:"400 ml",price:570,c10:541,c7:513,c3:484},
+{cat:"SPANJAARD",n:"Spark Multi-Purpose Lubricant FG",code:"53780400",p:"400 ml",price:550,c10:522,c7:495,c3:467},
+{cat:"SPANJAARD",n:"Silicone Spray Food Grade",code:"53750405",p:"400 ml",price:490,c10:465,c7:441,c3:416},
+{cat:"SPANJAARD",n:"Mechanic Blue Grease",code:"52500100",p:"30 g.",price:250,c10:237,c7:225,c3:212},
+{cat:"SPANJAARD",n:"Flaw & Crack 1 Cleaner",code:"51186300",p:"350 ml",price:410,c10:389,c7:369,c3:348},
+{cat:"SPANJAARD",n:"Flaw & Crack 2 Penetrant",code:"51187300",p:"300 ml",price:410,c10:389,c7:369,c3:348},
+{cat:"SPANJAARD",n:"Flaw & Crack 3 Developer",code:"51188300",p:"350 ml",price:410,c10:389,c7:369,c3:348},
+{cat:"SPANJAARD",n:"Mould Protector STD",code:"52534400",p:"400 ml",price:430,c10:408,c7:387,c3:391},
+{cat:"SPANJAARD",n:"Copper Compound (Brush Top)",code:"50520502",p:"500 g.",price:1150,c10:1092,c7:1035,c3:977},
+{cat:"SPANJAARD",n:"Copper Compound",code:"50521500",p:"400 ml",price:470,c10:446,c7:423,c3:399},
+{cat:"SPANJAARD",n:"Rubber Grease",code:"53520500",p:"500 g.",price:980,c10:931,c7:882,c3:833},
+{cat:"SPANJAARD",n:"CDF Clear Drying Film",code:"50401400",p:"400 ml.",price:660,c10:627,c7:594,c3:561},
+{cat:"SPANJAARD",n:"FMG-X Food Machinery Grease (สเปรย์)",code:"51181400",p:"400 ml",price:460,c10:437,c7:414,c3:391},
+{cat:"SPANJAARD",n:"FMG-X Grease FG Cartridge (หลอด)",code:"51180400",p:"400 g.",price:1150,c10:1092,c7:1035,c3:977},
+{cat:"SPANJAARD",n:"Nickel Compound Brush Top",code:"52800501",p:"500 g.",price:1600,c10:1520,c7:1440,c3:1360},
+{cat:"SPANJAARD",n:"Chain Lube WR Synthetic FG",code:"50500201",p:"400 ml.",price:600,c10:570,c7:540,c3:510},
+{cat:"SPANJAARD",n:"ADF Air Drying Film",code:"50021350",p:"325 ml.",price:550,c10:522,c7:495,c3:467},
+{cat:"SPANJAARD",n:"Graphite Spray",code:"51421400",p:"400 ml.",price:600,c10:570,c7:540,c3:510},
+{cat:"SPANJAARD",n:"Copper Grease",code:"50520501",p:"500 g.",price:470,c10:446,c7:423,c3:399},
+{cat:"SPANJAARD",n:"Electrical Contact Lubricant 1010",code:"51000500",p:"500 g.",price:900,c10:855,c7:810,c3:765},
+{cat:"SPANJAARD",n:"Contact Cleaner",code:"50931003",p:"400 ml.",price:370,c10:351,c7:333,c3:314},
+{cat:"SPANJAARD",n:"Lectro Kleen",code:"52340401",p:"400 ml.",price:450,c10:427,c7:405,c3:382},
+{cat:"SPANJAARD",n:"HTS Silicone Grease Food Grade",code:"51520501",p:"500 g.",price:1750,c10:1662,c7:1575,c3:1487},
+{cat:"SPANJAARD",n:"Silicone Paste FG",code:"53740501",p:"500 g.",price:1800,c10:1710,c7:1620,c3:1530},
+{cat:"SPANJAARD",n:"Chain & Linkage Lubricant Spray",code:"50500198",p:"400 ml.",price:400,c10:380,c7:360,c3:340},
+{cat:"SPANJAARD",n:"Rapid Kleen",code:"53400000",p:"400 ml.",price:340,c10:323,c7:306,c3:289},
+{cat:"SPANJAARD",n:"Open Gear & Wire Rope Spray",code:"52911400",p:"350 ml.",price:580,c10:551,c7:522,c3:493},
+{cat:"SPANJAARD",n:"Electrical Insulating Varnish Red",code:"50130300",p:"350 ml.",price:560,c10:532,c7:504,c3:476},
+ 
+/* ===== SEALXPERT / SURFACE ARMOR ===== */
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP10 Contact Cleaner",p:"450 ml.",price:180,c10:162,c7:153,c5:144,c3:135},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP20 Cleaner & Degreaser",p:"450 ml.",price:150,c10:135,c7:127,c5:120,c3:112},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP30 Zinc Cold-Galvanising (Bright)",p:"450 ml.",price:400,c10:360,c7:340,c5:320,c3:300},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP30 Zinc Cold-Galvanising (Matt)",p:"450 ml.",price:400,c10:360,c7:340,c5:320,c3:300},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP40 Multipurpose Lubricant",p:"450 ml.",price:150,c10:135,c7:127,c5:120,c3:112},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP40 (เริ่ม 1/1/2568)",p:"450 ml.",price:80,c10:72,c7:68,c5:64,c3:60},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP50 Moly G-RapidIn",p:"500 ml",price:600,c10:540,c7:510,c5:480,c3:450},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP60 Silicone Grease",p:"450 ml.",price:400,c10:360,c7:340,c5:320,c3:300,note:"SP50-SP60 ช่วยระบายสต๊อค (ใกล้หมดอายุ) ราคา 200 บาท/กระป๋อง คอมเต็ม"},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP70 Vaniscote Red",p:"450 ml.",price:350,c10:315,c7:297,c5:280,c3:262},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert Smoke Detector",p:"450 ml.",price:350,c10:315,c7:297,c5:280,c3:262},
+{cat:"SEALXPERT/SURFACE",n:"SealXPert SP80 Stainless Steel Polish",p:"450 ml.",price:350,c10:315,c7:297,c5:280,c3:262},
+{cat:"SEALXPERT/SURFACE",n:"Surface Armor Wrap",p:"2\"X12FT",price:1000,c10:900,c7:850,c5:800,c3:750},
+{cat:"SEALXPERT/SURFACE",n:"Surface Armor Wrap",p:"3\"X12FT",price:1200,c10:1080,c7:1020,c5:960,c3:900},
+{cat:"SEALXPERT/SURFACE",n:"Surface Armor Wrap",p:"4\"X12FT",price:1400,c10:1260,c7:1190,c5:1120,c3:1050},
+{cat:"SEALXPERT/SURFACE",n:"Surface Armor Wrap",p:"5\"X12FT",price:1600,c10:1440,c7:1360,c5:1280,c3:1200},
+{cat:"SEALXPERT/SURFACE",n:"Surface Armor Wrap",p:"6\"X12FT",price:1800,c10:1620,c7:1530,c5:1440,c3:1350},
+{cat:"SEALXPERT/SURFACE",n:"Surface Steel Stick Putty",p:"57 g",price:150,c10:135,c7:127,c5:120,c3:112},
+{cat:"SEALXPERT/SURFACE",n:"Surface Steel Stick Putty",p:"114 g.",price:280,c10:252,c7:238,c5:224,c3:210,note:"เอกสารชีท 11-6-69 แสดงราคา 114g. เป็น 1,200 บาท (ต่างจากราคานี้มาก) อาจเป็นคนละหน่วย (เช่น ยกลัง) - ควรเช็คยืนยันก่อนใช้"},
+ 
+/* ===== SEALXPERT / FILLTECH / SPECIAL (ชีท 11-6-2569) ===== */
+{cat:"SEALXPERT/SURFACE",n:"PS 102 Steel Repair Putty",p:"454 G.",price:1800},
+{cat:"SEALXPERT/SURFACE",n:"PS 103 Aluminium Repair Putty",p:"454 G.",price:1800},
+{cat:"SEALXPERT/SURFACE",n:"PS 104 Bronze Repair Putty",p:"227 G.",price:1800},
+{cat:"SEALXPERT/SURFACE",n:"PS 105 Stainless Steel Repair Putty",p:"454 G.",price:2200},
+{cat:"SEALXPERT/SURFACE",n:"PS 106 Underwater Repair Putty",p:"454 G.",price:1800},
+{cat:"SEALXPERT/SURFACE",n:"PS 108 Hi-Temp Repair Putty",p:"454 G.",price:3000},
+{cat:"SEALXPERT/SURFACE",n:"PS 109 Supermetal Epoxy Putty",p:"454 G.",price:3000},
+{cat:"SEALXPERT/SURFACE",n:"WR 211 Brushable Corrosion Resistant Coating",p:"500 G.",price:2400},
+{cat:"SEALXPERT/SURFACE",n:"WR204 Wear Resistant Coating (สติ๊กเกอร์ WR208, สินค้าแข็งตัว)",p:"5 Kg.",price:25000},
+{cat:"SEALXPERT/SURFACE",n:"Wrap Seal Plus Resin & Activator",p:"0.5 Kg.",price:1400},
+{cat:"SEALXPERT/SURFACE",n:"Seal X-Pert PL-105 Rubber Repair Putty",p:"350 g.",price:3200},
+{cat:"SEALXPERT/SURFACE",n:"Wrap Seal Quick Repair Kit for Pipe Leaks 206",price:2200},
+{cat:"SEALXPERT/SURFACE",n:"Wrap Seal Quick Repair Kit for Pipe Leaks 212",price:2600},
+{cat:"SEALXPERT/SURFACE",n:"Wrap Seal Quick Repair Kit for Pipe Leaks 309",note:"ไม่มีราคาระบุในเอกสาร - เช็คกับฝ่ายขาย"},
+{cat:"SEALXPERT/SURFACE",n:"Wrap Seal Quick Repair Kit for Pipe Leaks 412",price:2950},
+{cat:"SEALXPERT/SURFACE",n:"Ultra Seal (กว้าง 25 มม. หนา 5 มม. ยาว 5 เมตร)",price:790},
+{cat:"SEALXPERT/SURFACE",n:"Ultra Seal (กว้าง 32 มม. หนา 5 มม. ยาว 5 เมตร)",price:1200},
+{cat:"SEALXPERT/SURFACE",n:"Seal X-pert Teflon PTFE Tape",code:"0-35-85",p:"50mm x5mm x3m",price:3200},
+{cat:"SEALXPERT/SURFACE",n:"Seal X-pert Stainless Steel Pipe Clip",code:"0-35-86",p:"3 Kg.",price:6900},
+{cat:"SEALXPERT/SURFACE",n:"Wrap Clamp WC1 Leak Repair",p:"DN25x60mm",price:2200},
+{cat:"SEALXPERT/SURFACE",n:"Inner Wrap 980",code:"PI 980-20-2\"",p:"50mm(W)x30m(L)x0.5mm(T)",price:900},
+{cat:"SEALXPERT/SURFACE",n:"Inner Wrap 980",code:"PI 980-20-4\"",p:"100mm(W)x30m(L)x0.5mm(T)",price:1350},
+{cat:"SEALXPERT/SURFACE",n:"Inner Wrap 980",code:"PI 980-20-6\"",p:"150mm(W)x30m(L)x0.5mm(T)",price:1850},
+{cat:"SEALXPERT/SURFACE",n:"Outer Wrap 955",code:"PO 955-20-2\"",p:"50mm(W)x30m(L)x0.5mm(T)",price:900},
+{cat:"SEALXPERT/SURFACE",n:"Outer Wrap 955 (หัก-100แล้ว)",code:"PO 955-20-4\"",p:"100mm(W)x30m(L)x0.5mm(T)",price:1350},
+{cat:"SEALXPERT/SURFACE",n:"Outer Wrap 955",code:"PO 955-20-6\"",p:"150mm(W)x30m(L)x0.5mm(T)",price:1850},
+{cat:"SEALXPERT/SURFACE",n:"Primer 1027 (หัก-3Gal.แล้ว)",p:"3.78 Lt.",price:2600},
+{cat:"SEALXPERT/SURFACE",n:"Primer 1027",p:"18.93 Lt.",note:"ไม่มีราคาระบุในเอกสาร - เช็คกับฝ่ายขาย"},
+{cat:"SEALXPERT/SURFACE",n:"Seal X-Pert 939 (สต๊อคใหม่)",p:"50mm(W)x15m(L)x3mm(thk)",price:2000},
+{cat:"SEALXPERT/SURFACE",n:"SP70C Vanish Cote Clear",p:"450 ml",price:350},
+{cat:"SEALXPERT/SURFACE",n:"MOLY 1000 Anti-Seize Compound",p:"500 g.",price:650},
+{cat:"SEALXPERT/SURFACE",n:"SS106 Underwater Epoxy Putty (เข้าใหม่)",p:"114 g.",price:450},
+{cat:"SEALXPERT/SURFACE",n:"Filltech Grease Spray",code:"L-520",p:"550 ml",price:170},
+{cat:"SEALXPERT/SURFACE",n:"Filltech Sticker Remover",code:"C-710",p:"420 ml",price:170},
+{cat:"SEALXPERT/SURFACE",n:"Putty Aquapatch",p:"114 g.",price:450},
+{cat:"SEALXPERT/SURFACE",n:"Putty Fastpatch",p:"114 g.",price:450},
+{cat:"SEALXPERT/SURFACE",n:"Golden Band - B",p:"0.12 mm.",price:100},
+{cat:"SEALXPERT/SURFACE",n:"Golden Band - Big",p:"0.2 mm.",price:150},
+{cat:"SEALXPERT/SURFACE",n:"Golden Band - C",p:"0.2 mm.",price:50},
+ 
+/* ===== WATERPROOF (K-15 / CRACK-KOTE) ===== */
+{cat:"WATERPROOF",n:"K-15 PLUS Polyurethane (White/Grey/Green)",p:"20 Kg.",price:6900,c10:6210,c7:5865,c5:5520,c3:5175},
+{cat:"WATERPROOF",n:"K-15 PLUS Polyurethane (White/Grey/Green)",p:"5 Kg.",price:1980,c10:1782,c7:1683,c5:1584,c3:1485},
+{cat:"WATERPROOF",n:"K 15 UP Light Grey",p:"20 Kg.",price:7150,c10:6435,c7:6077,c5:5720,c3:5362},
+{cat:"WATERPROOF",n:"K 15 900 PLUS (White/Grey) T223",p:"20 Kg",price:8500},
+{cat:"WATERPROOF",n:"CRACK-KOTE 777",p:"20 Kg.",price:5500,c10:4950,c7:4675,c5:4400,c3:4125},
+{cat:"WATERPROOF",n:"CRACK-KOTE 777 (White/Grey/Green)",p:"5 Kg.",price:1650,c10:1485,c7:1402,c5:1320,c3:1237},
+{cat:"WATERPROOF",n:"K 007 Acrylic Primer",p:"20 Kg.",price:7150,c10:6435,c7:6077,c5:5720,c3:5362},
+{cat:"WATERPROOF",n:"K 009 Water-Based Silylated PMMA",p:"18 Kg.",price:7150,c10:6435,c7:6077,c5:5720,c3:5362},
+{cat:"WATERPROOF",n:"K 100 Water based Polyurethane Bitumen",p:"20 Kg.",price:6150,c10:5535,c7:5227,c5:4920,c3:4612},
+{cat:"WATERPROOF",n:"PU 300 1 Part Hydrophobic PU",p:"20 Kg.",price:9900,c10:8910,c7:8415,c5:7920,c3:7425},
+{cat:"WATERPROOF",n:"K 250 Acrylic Floor Coating",p:"20 Kg.",price:6600,c10:5940,c7:5610,c5:5280,c3:4950},
+{cat:"WATERPROOF",n:"K 305 Standard Flexible Cement",p:"10 Kg+25Kg",price:3850,c10:3465,c7:3272,c5:3080,c3:2887},
+{cat:"WATERPROOF",n:"K 303 Moisture Barrier",p:"10 Kg : 25 Kg.",price:3850,c10:3465,c7:3272,c5:3080,c3:2887},
+{cat:"WATERPROOF",n:"WASH PRIMER",p:"3.6 Kg",price:1980,c10:1782,c7:1683,c5:1584,c3:1485},
+{cat:"WATERPROOF",n:"ผ้าดิบ (กว้าง 1 เมตร)",p:"100 m/Roll",price:3850,c10:3465,c7:3272,c5:3080,c3:2887},
+{cat:"WATERPROOF",n:"ผ้าดิบ (กว้าง 1 เมตร)",p:"ต่อเมตร",price:38,c10:34,c7:32,c5:30,c3:28},
+{cat:"WATERPROOF",n:"Fiber Glass Mesh",p:"1m*100m",price:3850,c10:3465,c7:3272,c5:3080,c3:2887},
+{cat:"WATERPROOF",n:"ผงเบา",p:"10 Kg.",price:7150,c10:6435,c7:6077,c5:5720,c3:5362},
+ 
+/* ===== OIL SAFETY ===== */
+{cat:"OIL SAFETY",n:"OIL SAFETY CLEANER & DEGREASER",p:"500 ml./Foggy",price:150,c10:135,c5:127,c3:120},
+{cat:"OIL SAFETY",n:"OIL SAFETY CLEANER & DEGREASER",p:"3.78 L./Gal",price:740,c10:666,c5:629,c3:592},
+{cat:"OIL SAFETY",n:"OIL SAFETY CLEANER & DEGREASER",p:"18.93 L./Gal",price:3800,c10:3420,c5:3230,c3:3040},
+{cat:"OIL SAFETY",n:"OIL SAFETY CLEANER & DEGREASER",p:"208 L./Gal",price:32000,c10:28800,c5:27200,c3:25600},
+{cat:"OIL SAFETY",n:"Oil Only Pad - White",p:"40x50x3mm",price:40,c10:36,c5:34,c3:32},
+{cat:"OIL SAFETY",n:"Oil Only Pad - White (Box)",p:"40x50x3mm/Box",price:4000,c10:3600,c5:3400,c3:3200},
+{cat:"OIL SAFETY",n:"Chemical Absorbent Pads - Yellow",p:"40x50x2mm",price:35,c10:31,c5:29,c3:28},
+{cat:"OIL SAFETY",n:"Chemical Absorbent Pads - Yellow (Box)",p:"40x50x2mm/Box",price:3500,c10:3150,c5:2975,c3:2800},
+{cat:"OIL SAFETY",n:"Oil Only Roll - White",p:"80cm x45m x3mm/Roll",price:4500,c10:4050,c5:3825,c3:3240},
+{cat:"OIL SAFETY",n:"Oil Only Pillow - White",p:"25x35x3cm",price:180,c10:162,c5:153,c3:144},
+{cat:"OIL SAFETY",n:"Oil Only Sock - White",p:"7.6cm x120cm",price:180,c10:162,c5:153,c3:144},
+{cat:"OIL SAFETY",n:"Oil Only Boom - White",p:"12.7cm*300cm",price:1200,c10:1080,c5:1020,c3:960},
+{cat:"OIL SAFETY",n:"Oil Only Big Boom - White",p:"20cm*300cm",price:1800,c10:1620,c5:1530,c3:1440},
+{cat:"OIL SAFETY",n:"Oil Only Pom Pom Rope",p:"15m*30pom*60Kg./Set",price:5500,c10:4950,c5:4675,c3:4400},
+{cat:"OIL SAFETY",n:"Universal Pad - Grey",p:"40x50x2mm",price:35,c10:31,c5:29,c3:28},
+{cat:"OIL SAFETY",n:"Universal Pad - Grey (Box)",p:"40x50x2mm/Box",price:3500,c10:3150,c5:2975,c3:2800},
+{cat:"OIL SAFETY",n:"Universal Roll - Grey",p:"80cm x45m x3mm/Roll",price:5800,c10:5220,c5:4930,c3:4640},
+{cat:"OIL SAFETY",n:"Universal Pillow - Grey",p:"25x35x3cm",price:220,c10:198,c5:187,c3:176},
+{cat:"OIL SAFETY",n:"Universal Sock - Grey",p:"7.6cm x120cm",price:210,c10:189,c5:178,c3:168},
+{cat:"OIL SAFETY",n:"Transportation Spill Kit - เป้",p:"24 L./Set",price:3500,c10:3150,c5:2975,c3:2800},
+{cat:"OIL SAFETY",n:"Commercial Duty Kit - ถังเหลืองกลม",p:"75 L./Set",price:12500,c10:11250,c5:10625,c3:10000},
+{cat:"OIL SAFETY",n:"Oil Spill Kit (เลือกสีสินค้าในถังได้)",p:"120 L./Set",price:18000,c10:16200,c5:15300,c3:14400},
+{cat:"OIL SAFETY",n:"Oil Spill Kit (เลือกสีสินค้าในถังได้)",p:"240 L./Set",price:24000,c10:21600,c5:20400,c3:19200},
+{cat:"OIL SAFETY",n:"SP-007 Oil Safety Absorber - ผงดูดซับ",p:"12 Kg./Set",price:2500,c10:2250,c5:2125,c3:2000},
+ 
+/* ===== CRC (ตัวแทนหลัก - รายการเยอะมาก) ===== */
+{cat:"CRC",n:"CRC 2-26",code:"02005",p:"312 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC ELECTRICAL GRADE",code:"02009",p:"20 Lite",price:6400,c10:5760,c7:5440,c3:4800},
+{cat:"CRC",n:"CRC LECTRA CLEAN",code:"02018",p:"539 g.",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"CRC LECTRA CLEAN",code:"02021",p:"20 Lite",price:9500,c10:8550,c7:8075,c3:7125},
+{cat:"CRC",n:"CRC DI-ELECTRIC GREASE",code:"02083",p:"284 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC DI-ELECTRIC GREASE",code:"02085",p:"94 g.",price:780,c10:702,c7:663,c3:585},
+{cat:"CRC",n:"CRC SMOKE TEST",code:"02105",p:"71 g.",price:490,c10:441,c7:416,c3:367},
+{cat:"CRC",n:"CRC QD Contact Cleaner",code:"02130",p:"312 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC DRY PTFE LUBE",code:"03044",p:"284 g.",price:770,c10:693,c7:654,c3:577},
+{cat:"CRC",n:"CRC POWER LUBE WITH PTFE",code:"03045",p:"312 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC CHAIN & WIRE ROPE",code:"03050",p:"284 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC FOOD GRADE BELT DRESSING",code:"03065",p:"284 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC DRY MOLY LUBE",code:"03084",p:"312 g.",price:480,c10:432,c7:408,c3:360},
+{cat:"CRC",n:"CRC DRY GRAPHITE LUBE",code:"03094",p:"284 g.",price:580,c10:522,c7:493,c3:435},
+{cat:"CRC",n:"CRC QUICK CLEAN SAFETY SOLVENT",code:"03180",p:"539 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC Chlor-Free Degreaser",code:"03185",p:"426 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC Chlor-Free Degreaser",code:"03187",p:"20 Lite",price:6500,c10:5850,c7:5525,c3:4875},
+{cat:"CRC",n:"CRC INDUSTRIAL ADHESIVE REMOVER",code:"03250",p:"425 g.",price:420,c10:378,c7:357,c3:315},
+{cat:"CRC",n:"CRC SP-350",code:"03262",p:"340 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC SP-350",code:"03262",p:"312 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC FG Synthetic Gear Oil",code:"04232",p:"20 Lite",price:15000,c10:13500,c7:12750,c3:11250},
+{cat:"CRC",n:"CRC GASKET REMOVER",code:"05021",p:"340 g.",price:450,c10:405,c7:382,c3:336},
+{cat:"CRC",n:"CRC CITRUS ENGINE DEGREASE",code:"05027",p:"425 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC WHITE LITHIUM GREASE",code:"05037",p:"284 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC QD ELECTRONIC CLEANER",code:"05101",p:"127 g.",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC QD ELECTRONIC CLEANER",code:"05103",p:"311 g.",price:320,c10:288,c7:272,c3:240},
+{cat:"CRC",n:"CRC DI-ELECTRIC GREASE",code:"05109",p:"14.2 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC VISICLEAR SCREEN",code:"05131",p:"195 g.",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC ULTRA SCREWLOOSE",code:"05330",p:"312 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC AVIATION 3-36",code:"10200",p:"312 g.",price:580,c10:522,c7:493,c3:435},
+{cat:"CRC",n:"CRC AVIATION DEGREASER",code:"10900",p:"510 g.",price:1500,c10:1350,c7:1275,c3:1125},
+{cat:"CRC",n:"CRC MINUTE MEND",code:"14070",p:"114 g.",price:560,c10:504,c7:476,c3:420},
+{cat:"CRC",n:"CRC FOAM MINIMAL EXPANSION",code:"14077",p:"340 g.",price:850,c10:765,c7:722,c3:637},
+{cat:"CRC",n:"CRC FOAM MINIMAL EXPANSION",code:"14077",p:"340 g. (ราคาที่ 2)",price:650,c10:585,c7:552,c3:487},
+{cat:"CRC",n:"CRC ANTI-SEIZE COPPER SPRAY",code:"14095",p:"340 g.",price:750,c10:675,c7:637,c3:562},
+{cat:"CRC",n:"CRC PERMA MEND (SIZE L) 9x12",code:"14096",p:"9x12",price:3700,c10:3330,c7:3145,c3:2775},
+{cat:"CRC",n:"CRC HYDROFORCE FOAMING CITRUS CLEANER",code:"14400",p:"510 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC HYDROFORCE GLASS CLEANER",code:"14412",p:"510 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC FOAMING CITRUS CLEANER",code:"14414",p:"510 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC HYDROFORCE STAINLESS STEEL CLEANER & POLISH",code:"14424",p:"510 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC HYDROFORCE FOAMING CITRUS DEGREASER",code:"14428",p:"510 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC HYDROFORCE SUPER FOAMING CITRUS CLEANER",code:"14440",p:"510 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC LEAK DETECTOR",code:"14503",p:"510 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC STEEL RE-NU STAINLESS STEEL COATING",code:"18211",p:"396 g.",price:600,c10:540,c7:510,c3:450},
+{cat:"CRC",n:"CRC ZINC IT",code:"18413",p:"3.78 Lite",price:9500,c10:8550,c7:8075,c3:7125},
+{cat:"CRC",n:"CRC RUST CONVERTER",code:"14610NZ",p:"425 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC RUST CONVERTER",code:"18419",p:"3.78 Lite",old:5000,price:8500,c10:4500,c7:4250,c5:4000,c3:3450},
+{cat:"CRC",n:"CRC MECHANIX ORANGE",code:"SL1719",p:"4 Lite",price:1500,c10:1350,c7:1275,c3:1125},
+{cat:"CRC",n:"CRC MARINE GREASE",code:"SL3120",p:"397 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC STA-PLEX RED EP GREASE",code:"SL3121",p:"397 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC SUPER WHITE GREASE",code:"SL3151",p:"397 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC COPPER ANTI-SEIZE",code:"SL3190",p:"397 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC COPPER ANTI-SEIZE",code:"SL3191",p:"397 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC COPPER ANTI-SEIZE",code:"SL3192",p:"312 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC LITHIUM GP GREASE",code:"SL3310",p:"397 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC MOLY GRAPH EP GREASE",code:"SL3330",p:"397 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC Food Grade Multi-Purpose",code:"SL35600",p:"400 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC Extreme Duty Food Grease",code:"SL35615",p:"397 g.",price:650,c10:585,c7:552,c3:487},
+{cat:"CRC",n:"CRC FOOD GRADE ANTI-SEIZE",code:"SL35901",p:"227 g.",price:700,c10:630,c7:595,c3:525},
+{cat:"CRC",n:"CRC FOOD GRADE ANTI-SEIZE",code:"SL35903",p:"454 g.",price:1000,c10:900,c7:850,c3:750},
+{cat:"CRC",n:"CRC FOOD GRADE ANTI-SEIZE",code:"SL35905",p:"227 g.",price:1000,c10:900,c7:850,c3:750},
+{cat:"CRC",n:"CRC NICKEL ANTI-SEIZE",code:"SL35913",p:"454 g.",price:1700,c10:1530,c7:1445,c3:1275},
+{cat:"CRC",n:"CRC 2-26 ELECTRICAL LUBRICANT",code:"2005",p:"450 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC CO CONTACT CLEANER",code:"2015",p:"150 g.",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC CO CONTACT CLEANER",code:"2016",p:"450 g.",price:480,c10:432,c7:408,c3:360},
+{cat:"CRC",n:"CRC NF CONTACT CLEANER",code:"2017",p:"400 g.",price:800,c10:720,c7:680,c3:600},
+{cat:"CRC",n:"CRC LECTRA CLEAN",code:"2018",p:"400 g.",price:650,c10:585,c7:552,c3:487},
+{cat:"CRC",n:"CRC ELECTRICAL PARTS CLEANER",code:"2019",p:"400 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC LECTRA SHIELD",code:"2031",p:"300 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC RED URETHANE SEAL COATS",code:"2044",p:"300 g.",price:480,c10:432,c7:408,c3:360},
+{cat:"CRC",n:"CRC CLEAR URETHANE SEAL COATS",code:"2049",p:"300 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC ZINC IT",code:"2085",p:"350 g.",price:480,c10:432,c7:408,c3:360},
+{cat:"CRC",n:"CRC Bright Zinc-it",code:"2087NZ",p:"400 ml",price:440,c10:396,c7:374,c3:330},
+{cat:"CRC",n:"CRC CLEAR ZINC",code:"2102",p:"400 ml.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC 3-36",code:"3005",p:"300 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC SOFT SEAL",code:"3013",p:"300 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC RUST REMOVER",code:"3022",p:"1 Lite.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC RUST REMOVER",code:"3023",p:"4 Lite.",price:1200,c10:1080,c7:1020,c3:900},
+{cat:"CRC",n:"CRC ED SILICONE LUBRICANT",code:"3030",p:"300 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC ANTI-SPATTER",code:"3033",p:"300 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC WIRE ROPE & CABLE LUBE",code:"3035",p:"300 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC POWER LUBE WITH TEFLON",code:"3045",p:"300 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC 808 SILICONE LUBRICANT",code:"3055",p:"330 g.",price:320,c10:288,c7:272,c3:240},
+{cat:"CRC",n:"CRC TREFOLEX CUTTING COMPOUND",code:"3060",p:"500 ml.",price:1500,c10:1350,c7:1275,c3:1125},
+{cat:"CRC",n:"CRC C.D.T. CUTTING OIL",code:"3063",p:"300 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC GLASS CLEANER",code:"3070",p:"500 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC BELT GRIP",code:"3081",p:"400 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC LONG LIFE",code:"3097",p:"300 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC Food Grade Drylube",code:"3103",p:"340 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC LANOSHIELD",code:"3150",p:"350 g.",price:600,c10:540,c7:510,c3:450},
+{cat:"CRC",n:"CRC 5-56",code:"5005",p:"400 g.",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC 5-56",code:"5009",p:"20 Lite",price:6500,c10:5850,c7:5525,c3:4875},
+{cat:"CRC",n:"CRC TAC 2",code:"5035",p:"300 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC SO EASY PROTECTANT",code:"5041",p:"500 ml.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC AEROCLEAN",code:"5070",p:"400 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC BIO DEGREASER",code:"5072",p:"20 Lite",price:5500,c10:4950,c7:4675,c3:4125},
+{cat:"CRC",n:"CRC CLEAN-R-CARB",code:"5081",p:"400 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC BATTERY MAINTENANCE",code:"5097",p:"300 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC BATTERY TERMINAL PROTECTOR",code:"5098",p:"300 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC EVAPORUST",code:"EVR1",p:"1 Lite.",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"CRC EVAPORUST",code:"EVR5",p:"5 Lite.",price:2000,c10:1800,c7:1700,c3:1500},
+{cat:"CRC",n:"CRC FOOD GRADE WHITE GREASE",code:"03038",p:"312 g.",price:800,c10:720,c7:680,c3:600},
+{cat:"CRC",n:"CRC FOOD GRADE SILICONE",code:"03040",p:"284 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC FOOD GRADE CHAIN LUBE",code:"03055",p:"312 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC FOOD GRADE MACHINE OIL",code:"03081",p:"312 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC FOOD GRADE DI ELECTRIC GREASE",code:"03082",p:"283 g.",price:900,c10:810,c7:765,c3:675},
+{cat:"CRC",n:"CRC FOOD GRADE PENETRATING OIL",code:"03086",p:"312 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC FOOD GRADE SILICONE SEALANT - WHITE",code:"14082",p:"299 ml.",price:850,c10:765,c7:722,c3:637},
+{cat:"CRC",n:"CRC M-P FOOD GRADE GREASE",code:"SL35600",p:"397 g.",price:600,c10:540,c7:510,c3:450},
+{cat:"CRC",n:"CRC SYNTHETIC FOOD GRADE GREASE",code:"SL35610",p:"397 g.",price:1200,c10:1080,c7:1020,c3:900},
+{cat:"CRC",n:"CRC EXTREME DUTY FOOD GRADE GREASE",code:"SL35615",p:"397 g.",price:800,c10:720,c7:680,c3:600},
+{cat:"CRC",n:"CRC FOOD GRADE WHITE GREASE",code:"FG03038",p:"312 g.",price:850,c10:765,c7:722,c3:637},
+{cat:"CRC",n:"CRC FOOD GRADE SILICONE",code:"FG03040",p:"284 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC Food Grade Machine Oil",code:"FG03081",p:"312 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC FOOD GRADE BIO-DEGREASER",code:"FG05167",p:"750 ml.",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"CRC FOOD GRADE BIO-DEGREASER",code:"FG05171",p:"5 Lite.",price:2200,c10:1980,c7:1870,c3:1650},
+{cat:"CRC",n:"CRC FOOD GRADE BIO-DEGREASER",code:"FG05172",p:"20 Lite",price:5000,c10:4500,c7:4250,c3:3750},
+{cat:"CRC",n:"CRC Food Grade Chain Lube",code:"FG03055",p:"340 g.",price:500,c10:450,c7:425,c3:375},
+{cat:"CRC",n:"CRC FOOD GRADE SILICONE GREASE",code:"3037NZ",p:"75 ml",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC FOOD GRADE DRY LUBE",code:"3101NZ",p:"400 ml.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC FOOD GRADE CO CONTACT CLEANER",code:"3102NZ",p:"400 ml.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC SILICONE GREASE",code:"3036NZ",p:"75 ml",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC DISC BRAKE QUIET (PASTE)",code:"05016",p:"118 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC DISC BRAKE QUIET (AEROSOL)",code:"05017",p:"225 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC GASKET REMOVER",code:"05021",p:"340 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC BATTERY CLEANER",code:"05023",p:"312 g.",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC ENGINE DEGREASER",code:"05025",p:"425 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC CITRUS ENGINE DEGREASER",code:"05027",p:"425 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC BATTERY PROTECTOR",code:"05046",p:"213 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC BRAKLEEN POWER-JET",code:"05050",p:"397 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC BRAKLEEN POWER-JET",code:"05052",p:"20 Lite",price:7000,c10:6300,c7:5950,c3:5250},
+{cat:"CRC",n:"CRC FUEL INJECTOR CLEANER",code:"05061",p:"355 ml",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC PREMIUM FUEL INJECTOR CLEANER",code:"05062",p:"355 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC GUARANTEED TO PASS",code:"05063",p:"355 ml",price:700,c10:630,c7:595,c3:525},
+{cat:"CRC",n:"CRC THROTTLE BODY & AIR-INTAKE CLEANER",code:"05078",p:"340 g.",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"CRC DE-SQUEAK",code:"05080",p:"319 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC CLEAN-R-CARB",code:"05081",p:"454 g.",price:280,c10:252,c7:238,c3:210},
+{cat:"CRC",n:"CRC MASS AIR FLOW",code:"05110",p:"312 g.",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC MAF/TB CLEANER (TWIN PACK)",code:"05111",p:"270 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC Visiclear Display Cleaner",code:"05131",p:"195 g.",price:280,c10:252,c7:238,c3:210},
+{cat:"CRC",n:"CRC DIESEL INJECTOR CLEANER PLUS",code:"05212",p:"355 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC MOTOR TREATMENT",code:"05316",p:"474 ml",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC GDI INTAKE VALVE & TURBO CLEANER",code:"05319",p:"312 g.",price:600,c10:540,c7:510,c3:450},
+{cat:"CRC",n:"CRC BELT CONDITIONER",code:"05350",p:"213 g.",price:600,c10:540,c7:510,c3:450},
+{cat:"CRC",n:"CRC BRAKE CALIPER GREASE",code:"05351",p:"71 g.",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"CRC BRAKE CALIPER GREASE",code:"05353",p:"340 g.",price:2000,c10:1800,c7:1700,c3:1500},
+{cat:"CRC",n:"CRC BRAKE CALIPER GREASE",code:"05359",p:"227 g.",price:800,c10:720,c7:680,c3:600},
+{cat:"CRC",n:"CRC SILARAMIC BRAKE GREASE",code:"05361",p:"142 g.",price:650,c10:585,c7:552,c3:487},
+{cat:"CRC",n:"CRC QC-82 FOAM DEGREASER",code:"05482",p:"128 g.",price:300,c10:270,c7:255,c3:225},
+{cat:"CRC",n:"CRC MASS AIR FLOW SENSOR CLEANER",code:"05610",p:"128 g.",price:280,c10:252,c7:238,c3:210},
+{cat:"CRC",n:"CRC THROTTLE BODY & AIR-INTAKE CLEANER",code:"05678",p:"142 g.",price:200,c10:180,c7:170,c3:150},
+{cat:"CRC",n:"CRC 1-TANK POWER GASOLINE",code:"05815",p:"444 ml.",price:900,c10:810,c7:765,c3:675},
+{cat:"CRC",n:"CRC BRAKLEEN QUICK DRY",code:"1754256",p:"500 ml.",price:150,c10:135,c7:127,c3:112},
+{cat:"CRC",n:"CRC 1-TANK POWER DIESEL",code:"05816",p:"444 ml.",price:700,c10:630,c7:595,c3:525},
+{cat:"CRC",n:"CRC 7 MINUTE RADIATOR FLUSH",code:"401320",p:"444 ml.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC COPPER COAT SPRAY",code:"401612",p:"255 g.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC TRANS-X",code:"402015",p:"443 ml.",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"CRC ENGINE OIL STOP LEAK",code:"402715",p:"444 ml.",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"CRC TRANS-X 75K HIGH MILEAGE",code:"402916",p:"473 ml.",price:800,c10:720,c7:680,c3:600},
+{cat:"CRC",n:"CRC STEER-X",code:"403015",p:"444 ml.",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"CRC CV JOINT GREASE",code:"SL3174",p:"113.4 g.",price:380,c10:342,c7:323,c3:285},
+{cat:"CRC",n:"CRC EXTREME PRESSURE ENGINE ASSEMBLY LUBE",code:"SL3331",p:"284 g.",price:850,c10:765,c7:722,c3:637},
+{cat:"CRC",n:"CRC EXTREME PRESSURE ENGINE ASSEMBLY LUBE",code:"SL3333",p:"78 g.",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"CRC MANISEAL",code:"5061",p:"145 g.",price:200,c10:180,c7:170,c3:150},
+{cat:"CRC",n:"CRC RED RTV GASKET SILICONE",code:"8629NZ",p:"85 g.",price:150,c10:135,c7:127,c3:112},
+{cat:"CRC",n:"CRC GREY RTV GASKET SILICONE",code:"8637NZ",p:"85 g.",price:150,c10:135,c7:127,c3:112},
+{cat:"CRC",n:"CRC PENETROX A",code:"P8A",p:"227 g.",price:900,c10:810,c7:765,c3:675},
+{cat:"CRC",n:"CRC PENETROX E",code:"PENE-8",p:"227 g.",price:1200,c10:1080,c7:1020,c3:900},
+{cat:"CRC",n:"CRC PENETROX A-13",code:"PENA13-8",p:"227 g.",price:1200,c10:1080,c7:1020,c3:900},
+{cat:"CRC",n:"Ambersil Formula 10",code:"31541",p:"400 ml",price:320,c10:288,c7:272,c3:240},
+{cat:"CRC",n:"Ambersil Amberclens",code:"31592",p:"400 ml",price:320,c10:288,c7:272,c3:240},
+{cat:"CRC",n:"Ambersil Label Remover",code:"31629",p:"200 ml",price:250,c10:225,c7:212,c3:187},
+{cat:"CRC",n:"Ambersil Foodgard Silicone",code:"30248",p:"400 ml",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"Ambersil Leak Detector",code:"31633",p:"400 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"Ambersil Detector Cleaner-1",code:"30288",p:"400 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"Ambersil Detector Penetrant-2",code:"30289",p:"400 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"Ambersil Detector Developer-3",code:"30290",p:"400 ml",price:350,c10:315,c7:297,c3:262},
+{cat:"CRC",n:"Ambersil Acrylic Conformal Coating",code:"30235",p:"400 ml",price:550,c10:495,c7:467,c3:412},
+{cat:"CRC",n:"Ambersil Acrylic Conformal Coating",code:"30257",p:"5 Lite.",price:4000,c10:3600,c7:3400,c3:3000},
+{cat:"CRC",n:"Ambersil Mould Protective",code:"31545",p:"400 ml",price:400,c10:360,c7:340,c3:300},
+{cat:"CRC",n:"Acrylic Coating EC-800",code:"EC8008",p:"420 ml",price:450,c10:405,c7:382,c3:337},
+{cat:"CRC",n:"CRC Plasticote 70 (สเปรย์เคลือบแผงวงจร)",p:"425 ml",price:300,c10:270,c7:255,c3:225},
+ 
+/* ===== DYKEM ===== */
+{cat:"DYKEM",n:"BRITE-MARK 916 Black Medium",code:"84002",p:"12/pack",price:360,c10:324,c5:306,c3:288},
+{cat:"DYKEM",n:"BRITE-MARK 916 White Medium",code:"84003",p:"12/pack",price:360,c10:324,c5:306,c3:288},
+{cat:"DYKEM",n:"BRITE-MARK 916 Yellow Medium",code:"84004",p:"12/pack",price:360,c10:324,c5:306,c3:288},
+{cat:"DYKEM",n:"BRITE-MARK 40 Black Medium",code:"40003",p:"12/pack",price:380,c10:342,c5:323,c3:304},
+{cat:"DYKEM",n:"BRITE-MARK 40 Yellow Medium",code:"40006",p:"12/pack",price:380,c10:342,c5:323,c3:304},
+{cat:"DYKEM",n:"BRITE-MARK 40 White Medium",code:"40008",p:"12/pack",price:380,c10:342,c5:323,c3:304},
+{cat:"DYKEM",n:"TEXPEN Marker Blue Medium",code:"16013",p:"12/pack",price:510},
+{cat:"DYKEM",n:"TEXPEN Marker Yellow Medium",code:"16063",p:"12/pack",price:490,c10:441,c5:416,c3:392},
+{cat:"DYKEM",n:"TEXPEN Marker White Medium",code:"16083",p:"12/pack",price:490,c10:441,c5:416,c3:392},
+{cat:"DYKEM",n:"DALO Marker Blue Medium",code:"26013",p:"6/pack",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"DALO Marker Yellow Medium",code:"26063",p:"6/pack",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"DALO Marker White Medium",code:"26083",p:"6/pack",price:730,c10:657,c5:620,c3:584},
+{cat:"DYKEM",n:"DALO Marker White Broad",code:"26084",p:"6/pack",price:510,c10:459,c5:433,c3:408},
+{cat:"DYKEM",n:"RINZ OFF 916 Blue Medium",code:"91105",p:"12/pack",price:200,c10:180,c5:170,c3:160},
+{cat:"DYKEM",n:"RINZ OFF 916 Red Medium",code:"91106",p:"12/pack",price:200,c10:180,c5:170,c3:160},
+{cat:"DYKEM",n:"RINZ OFF 916 Green Medium",code:"91108",p:"12/pack",price:200,c10:180,c5:170,c3:160},
+{cat:"DYKEM",n:"RINZ OFF 916 Yellow",code:"91757",p:"12/pack",price:200,c10:180,c5:170,c3:160},
+{cat:"DYKEM",n:"SUDZ OFF 916 White Medium",code:"91146",p:"12/pack",price:200,c10:180,c5:170,c3:160},
+{cat:"DYKEM",n:"SUDZ OFF 916 Blue Medium",code:"91938",p:"12/pack",price:200,c10:180,c5:170,c3:160},
+{cat:"DYKEM",n:"DYKEM High Temp 44 Black Medium",code:"44250",p:"12/pack",price:700,c10:630,c5:595,c3:560},
+{cat:"DYKEM",n:"High Temp TXP White Medium",code:"17083",p:"12/pack",price:380,c10:342,c5:323,c3:304},
+{cat:"DYKEM",n:"High Purity 44 Black Medium",code:"44404",p:"12/pack",price:550,c10:522,c5:495,c3:467},
+{cat:"DYKEM",n:"High Purity 44 Blue Medium",code:"44534",p:"12/pack",price:550,c10:522,c5:495,c3:467},
+{cat:"DYKEM",n:"High Purity 44 White Medium",code:"44729",p:"12/pack",price:550,c10:522,c5:495,c3:467},
+{cat:"DYKEM",n:"DYKEM High Purity 44 Yellow",code:"44916",p:"12/pack",price:670,c10:636,c5:603,c3:569},
+{cat:"DYKEM",n:"STEEL BLUE Aerosol 12oz",code:"80000",p:"12/pack",price:1150,c10:1092,c5:1035,c3:977},
+{cat:"DYKEM",n:"STEEL BLUE Brush-In-Cap 8oz",code:"80400",p:"12/pack",price:960,c10:912,c5:864,c3:816},
+{cat:"DYKEM",n:"STEEL RED Brush-In-Cap 8oz",code:"80496",p:"12/pack",price:960,c10:912,c5:864,c3:816},
+{cat:"DYKEM",n:"STEEL RED Aerosol 12oz",code:"80096",p:"12/pack",price:1200,c10:1140,c5:1080,c3:1020},
+{cat:"DYKEM",n:"STEEL RED BOTTLE",code:"80696",p:"930 ml.",price:1700,c10:1615,c5:1530,c3:1445},
+{cat:"DYKEM",n:"Remover & Prep Aerosol 12oz",code:"82038",p:"12/pack",price:1000,c10:950,c5:900,c3:850},
+{cat:"DYKEM",n:"Remover & Prep Gal",code:"82738",p:"3.78 Lt.",price:2950,c10:2802,c5:2655,c3:2507},
+{cat:"DYKEM",n:"HI-SPOT BLUE Tube",code:"83307",p:"0.55 oz",price:820,c10:738,c5:697,c3:656},
+{cat:"DYKEM",n:"CROSS CHECK Orange",code:"83314",p:"1.0 oz",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"CROSS CHECK Blue",code:"83318",p:"1.0 oz",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"CROSS CHECK Red",code:"83316",p:"1.0 oz",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"CROSS CHECK Yellow",code:"83317",p:"1.0 oz",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"CROSS CHECK Pink",code:"83320",p:"1.0 oz",price:600,c10:540,c5:510,c3:480},
+{cat:"DYKEM",n:"Cross Check Plus - Yellow",code:"83417",p:"1.0 oz",price:1125,c10:1012,c5:956,c3:900},
+{cat:"DYKEM",n:"Cross Check Plus - Blue",code:"83418",p:"1.0 oz",price:1125,c10:1012,c5:956,c3:900},
+{cat:"DYKEM",n:"Cross Check Plus - Dark Pink",code:"83420",p:"1.0 oz",price:1125,c10:1012,c5:956,c3:900},
+{cat:"DYKEM",n:"Dykem SAFE MARK W DETEX medium felt",code:"57802",p:"#45",price:530,c10:503,c5:477,c3:450},
+ 
+/* ===== HARDEX ===== */
+{cat:"HARDEX",n:"HARDEX",code:"HD420",p:"200ml/Can",price:90,c10:81,c7:76,c3:67},
+{cat:"HARDEX",n:"HARDEX",code:"HD440",p:"400ml/Can",price:110,c10:99,c7:93,c3:82},
+{cat:"HARDEX",n:"HARDEX",code:"HD450",p:"500ml/Can",price:120,c10:108,c7:102,c3:90},
+{cat:"HARDEX",n:"HARDEX Belt Dressing",code:"HD250",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Electrical Part Contact Cleaner",code:"HD150",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Electronic Contact Cleaner",code:"HD390",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Auto Under Coating",code:"HD380",p:"500ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Carburettor & Choke Cleaner",code:"HD888",p:"400ml/Can",price:170,c10:153,c7:144,c3:127},
+{cat:"HARDEX",n:"Hardex Brake & Parts Cleaner",code:"HD860",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Brake & Parts Cleaner (Non)",code:"HD861",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Contact Cleaner",code:"HD350",p:"200ml/Can",price:170,c10:153,c7:144,c3:127},
+{cat:"HARDEX",n:"Hardex Throttle Body Cleaner",code:"HD901",p:"400ml/Can",price:170,c10:153,c7:144,c3:127},
+{cat:"HARDEX",n:"HARDEX Multi-Purpose Silicone (แห้ง)",code:"HD200-1",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"Hardex Multi-Purpose Silicone (เปียก)",code:"HD200-2",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HARDEX Chain & Wire Rope Lub. Spray",code:"HD500",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"Spray Grease",code:"HD600",p:"400ml/Can",price:190,c10:171,c7:161,c3:142},
+{cat:"HARDEX",n:"HI-TEMP GREY",code:"RS615",p:"85.2g/Pcs",price:105,c10:94,c7:89,c3:78},
+{cat:"HARDEX",n:"HARDEX HI-TEMP RED",code:"RS650",p:"85.2g/Pcs",price:105,c10:94,c7:89,c3:78},
+{cat:"HARDEX",n:"HI-TEMP RED NEW",code:"RS650",p:"300 ml/Pcs",price:500,c10:450,c7:425,c3:375},
+{cat:"HARDEX",n:"HARDEX LIQUID GASKET MAKER",code:"61140",p:"100g/Can",price:100,c10:90,c7:85,c3:75},
+{cat:"HARDEX",n:"5 MIN (GREY)",code:"HE5",p:"56.8g/Can",price:80,c10:72,c7:68,c3:60},
+{cat:"HARDEX",n:"5 MIN (CLEAR)",code:"HE205",p:"56.8g/Can",price:80,c10:72,c7:68,c3:60},
+{cat:"HARDEX",n:"3-TON EPOXY",code:"HE30",p:"56.8g/Can",price:80,c10:72,c7:68,c3:60},
+{cat:"HARDEX",n:"BETA FAST WELD",code:"BE4",p:"56.8g/Can",price:90,c10:81,c7:76,c3:67},
+{cat:"HARDEX",n:"NUT LOCK",code:"6242",p:"50ml/Pcs",price:650,c10:585,c7:552,c3:487},
+{cat:"HARDEX",n:"STUD AND BOLT LOCK",code:"6271",p:"50ml/Pcs",price:650,c10:585,c7:552,c3:487},
+{cat:"HARDEX",n:"RETAINING COMPOUND",code:"6609",p:"50ml/Pcs",price:650,c10:585,c7:552,c3:487},
+{cat:"HARDEX",n:"NUT AND BOLT LOCK",code:"6262",p:"50ml/Pcs",price:650,c10:585,c7:552,c3:487},
+{cat:"HARDEX",n:"HEAVY DUTY BEARING",code:"6277",p:"50ml/Pcs",price:650,c10:585,c7:552,c3:487},
+{cat:"HARDEX",n:"PIPE SEALANT GENERAL",code:"6572",p:"50ml/Pcs",price:650,c10:585,c7:552,c3:487},
+{cat:"HARDEX",n:"REAR VIEW",code:"HE-10",p:"0.6ml/Pcs",price:70,c10:63,c7:59,c3:52},
+{cat:"HARDEX",n:"HARDEX REPAIR WRAP",code:"HE206",p:"2\"X6Ft/Roll",price:2250,c10:2025,c7:1912,c3:1687},
+{cat:"HARDEX",n:"HARDEX REPAIR WRAP",code:"HE212",p:"2\"X12Ft/Roll",price:2650,c10:2385,c7:2252,c3:1987},
+{cat:"HARDEX",n:"HARDEX REPAIR WRAP",code:"HE309",p:"3\"X9Ft/Roll",price:2650,c10:2385,c7:2252,c3:1987},
+{cat:"HARDEX",n:"HARDEX REPAIR WRAP",code:"HE412",p:"4\"X12Ft/Roll",price:3150,c10:2835,c7:2677,c3:2362},
+{cat:"HARDEX",n:"Fast Clean Lemon Fragrance",code:"HD188",p:"100g/Pcs",price:100,c10:90,c7:85,c3:75},
+{cat:"HARDEX",n:"Fast Clean Lemon Fragrance",code:"HD187",p:"750g/Pcs",price:350,c10:315,c7:297,c3:262},
+{cat:"HARDEX",n:"Fast Clean Lemon Fragrance",code:"HD182",p:"2Kg./Pcs",price:800,c10:720,c7:680,c3:600},
+{cat:"HARDEX",n:"ปืนยิงซิลิโคน Hardex",p:"Pcs",price:200,c10:180,c7:170,c3:150},
+ 
+/* ===== LPS ===== */
+{cat:"LPS",n:"LPS PSC Plastic Safe",code:"04620",p:"18 oz.",price:1400,c10:1330,c7:1260,c3:1190},
+{cat:"LPS",n:"LPS CFC Free",code:"03116",p:"11 oz.",price:560,c10:532,c7:504,c3:476},
+{cat:"LPS",n:"LPS CFC Free",code:"03101",p:"3.78 liters",price:4700,c10:4465,c7:4230,c3:3995},
+{cat:"LPS",n:"LPS MICRO-X Contact Cleaner",code:"04516",p:"11 oz.",price:660,c10:627,c7:594,c3:561},
+{cat:"LPS",n:"LPS 1 Greaseless Lubricant",code:"00116",p:"11 oz.",price:720,c10:684,c7:648,c3:612},
+{cat:"LPS",n:"LPS 1 D",code:"00116-1",p:"16 oz.",price:250,c10:237,c7:225,c3:212},
+{cat:"LPS",n:"LPS PRESOLVE CITRUS",code:"01420",p:"15 oz.",price:1100,c10:1045,c7:990,c3:935},
+{cat:"LPS",n:"LPS PRESOLVE CITRUS",code:"01428",p:"3.78 liters",price:5780,c10:5491,c7:5202,c3:4913},
+{cat:"LPS",n:"LPS PRESOLVE CITRUS",code:"01405",p:"18.93 liters",price:25650,c10:24367,c7:23085,c3:21802},
+{cat:"LPS",n:"LPS F-104 FAST DRY",code:"04920",p:"15 oz.",price:850,c10:807,c7:765,c3:722},
+{cat:"LPS",n:"LPS PRECISION CLEAN (สเปรย์)",code:"02720",p:"18 oz.",price:750,c10:712,c7:675,c3:637},
+{cat:"LPS",n:"LPS PRECISION CLEAN (Foggy-D)",code:"02728-D",p:"800 cc.",price:500,c10:475,c7:450,c3:425},
+{cat:"LPS",n:"LPS PRECISION CLEAN (สูตรเข้มข้น)",code:"02701",p:"3.78 liters",price:2600,c10:2470,c7:2340,c3:2210},
+{cat:"LPS",n:"LPS PRECISION CLEAN (สูตรเข้มข้น)",code:"02705",p:"18.93 liters",price:11000,c10:10450,c7:9900,c3:9350},
+{cat:"LPS",n:"LPS PRECISION CLEAN (สูตรเข้มข้น)",code:"02755",p:"208 liters",price:97000,c10:92150,c7:87300,c3:82450},
+{cat:"LPS",n:"LPS PRECISION CLEAN (พร้อมใช้)",code:"02701-R",p:"3.78 liters",price:850,c10:807,c7:765,c3:722},
+{cat:"LPS",n:"LPS PRECISION CLEAN (พร้อมใช้)",code:"02705-R",p:"18.93 liters",price:3400,c10:3230,c7:3060,c3:2890},
+{cat:"LPS",n:"LPS PRECISION CLEAN (พร้อมใช้)",code:"02765",p:"208 liters",price:23500,c10:22325,c7:21150,c3:19975},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (เข้มข้น)",code:"06328-D",p:"800 cc.",price:650,c10:617,c7:585,c3:552},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (เข้มข้น)",code:"06301",p:"3.78 liters",price:3000,c10:2850,c7:2700,c3:2550},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (เข้มข้น) [ราคา2]",code:"06301",p:"3.78 liters",price:2400,c10:2280,c7:2160,c3:2040},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (เข้มข้น)",code:"06305",p:"18.93 liters",price:12000,c10:11400,c7:10800,c3:10200},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (เข้มข้น)",code:"06355",p:"208 liters",price:130000,c10:123500,c7:117000,c3:110500},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (พร้อมใช้)",code:"06328-R",p:"800 cc.",price:550,c10:522,c7:495,c3:467},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (พร้อมใช้)",code:"06301-R",p:"3.78 liters",price:880,c10:836,c7:792,c3:748},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (พร้อมใช้)",code:"06305-R",p:"18.93 liters",price:3450,c10:3277,c7:3105,c3:2932},
+{cat:"LPS",n:"LPS T-91 Non-Solvent Degreaser (พร้อมใช้)",code:"06355-R",p:"208 liters",price:26000,c10:24700,c7:23400,c3:22100},
+{cat:"LPS",n:"LPS 1D",p:"16 oz.",price:250,c10:232,c7:220,c3:208},
+{cat:"LPS",n:"LPS 1 Greaseless Lubricant",code:"01128",p:"3.78 liters",price:5200,c10:4940,c7:4680,c3:4420},
+{cat:"LPS",n:"LPS MAX2",code:"90216",p:"11 oz.",price:770,c10:731,c7:693,c3:654},
+{cat:"LPS",n:"LPS 2 Heavy-Duty Lubricant",code:"02128",p:"3.78 liters",price:4900,c10:4655,c7:4410,c3:4165},
+{cat:"LPS",n:"LST Penetrant",code:"01928",p:"3.78 liters",price:3700,c10:3515,c7:3330,c3:3145},
+{cat:"LPS",n:"LPS KB 88 The Ultimate Penetrant",code:"02316",p:"13 oz.",price:880,c10:836,c7:792,c3:748},
+{cat:"LPS",n:"LPS KB 88 The Ultimate Penetrant",code:"02301",p:"3.78 liters",price:6200,c10:5890,c7:5580,c3:5270},
+{cat:"LPS",n:"LPS Heavy Duty Silicone (Wet)",code:"01516",p:"11 oz.",price:450,c10:427,c7:405,c3:382},
+{cat:"LPS",n:"LPS Dry Film Silicone",code:"01616",p:"12 oz.",price:1250,c10:1187,c7:1125,c3:1062},
+{cat:"LPS",n:"LPS Magnum (Wet PTFE)",code:"00616",p:"11 oz.",price:950,c10:902,c7:855,c3:807},
+{cat:"LPS",n:"LPS Dry Film PTFE",code:"02616",p:"12 oz.",price:1450,c10:1377,c7:1305,c3:1232},
+{cat:"LPS",n:"LPS Max Chain Mate (Wet Moly)",code:"92416",p:"11 oz.",price:1100,c10:1045,c7:990,c3:935},
+{cat:"LPS",n:"LPS FORCE 842 Dry Moly Lubricant",code:"02516",p:"11 oz.",price:1430,c10:1358,c7:1287,c3:1215},
+{cat:"LPS",n:"LPS All Purpose Anti-Seize",code:"04110",p:"454 g.",price:1280,c10:1216,c7:1152,c3:1088},
+{cat:"LPS",n:"LPS Nickel Anti-Seize",code:"03910",p:"454 g.",price:2750,c10:2612,c7:2475,c3:2337},
+{cat:"LPS",n:"LPS Multi-Purpose Bearing Grease",code:"70614",p:"400 g.",price:620,c10:589,c7:558,c3:527},
+{cat:"LPS",n:"LPS Multi-Purpose Bearing Grease",code:"70606",p:"35 lbs. pail",price:18000,c10:17100,c7:16200,c3:15300},
+{cat:"LPS",n:"LPS Aqua Bearing Grease",code:"70514",p:"400 g.",price:600,c10:570,c7:540,c3:510},
+{cat:"LPS",n:"LPS Foodlube Bearing Grease",code:"70114",p:"400 g.",price:950,c10:902,c7:855,c3:807},
+{cat:"LPS",n:"LPS Hi-Temp Bearing Grease",code:"70214",p:"400 g.",price:930,c10:883,c7:837,c3:790},
+{cat:"LPS",n:"LPS Hi-Load Bearing Grease",code:"70414",p:"400 g.",price:780,c10:741,c7:702,c3:663},
+{cat:"LPS",n:"LPS Hi-Load Bearing Grease",code:"70406",p:"35 lbs. pail",price:22000,c10:20900,c7:19800,c3:18700},
+{cat:"LPS",n:"LPS Bio Green Bearing Grease",code:"70706",p:"35 lbs. pail",price:25000,c10:23750,c7:22500,c3:21250},
+{cat:"LPS",n:"LPS Red & Redi Multi-Purpose Red Grease",code:"05816",p:"11 oz.",price:690,c10:655,c7:621,c3:586},
+{cat:"LPS",n:"LPS White Lithium Grease with PTFE",code:"03816",p:"10 oz.",price:690,c10:655,c7:621,c3:586},
+{cat:"LPS",n:"LPS Clear Penetrating Grease",code:"06716",p:"11 oz.",price:1150,c10:1092,c7:1035,c3:977},
+{cat:"LPS",n:"LPS Cold Galvanize Corrosion Inhibitor",code:"00516",p:"14 oz.",price:1000,c10:950,c7:900,c3:850},
+{cat:"LPS",n:"LPS 3 Premier Rust Inhibitor",code:"00316",p:"11 oz.",price:860,c10:817,c7:774,c3:731},
+{cat:"LPS",n:"LPS 3 Premier Rust Inhibitor",code:"03128",p:"3.78 liters",price:6600,c10:6270,c7:5940,c3:5610},
+{cat:"LPS",n:"LPS Aquacut Cutting Fluid",code:"01216",p:"16 fl.oz.",price:630,c10:598,c7:567,c3:535},
+{cat:"LPS",n:"LPS Dual Action Plus #1 Cutting Fluid",code:"40120",p:"16 fl.oz.",price:1000,c10:950,c7:900,c3:850},
+{cat:"LPS",n:"LPS Dual Action Plus #1 Cutting Fluid",code:"40130",p:"3.78 liters",price:5300,c10:5035,c7:4770,c3:4505},
+{cat:"LPS",n:"LPS 1 Gold Cutting Fluid",code:"40320",p:"16 fl.oz.",price:930,c10:883,c7:837,c3:790},
+{cat:"LPS",n:"LPS Tapmatic Tricut Cutting Fluid",code:"05316",p:"16 fl.oz.",price:980,c10:931,c7:882,c3:833},
+{cat:"LPS",n:"LPS Food G. Machine Oil",code:"01316",p:"11 oz.",price:890,c10:845,c7:801,c3:756},
+{cat:"LPS",n:"LPS Detex Food Grade Silicone Lubricant",code:"01716",p:"10 oz.",price:630,c10:598,c7:567,c3:535},
+{cat:"LPS",n:"LPS Food Grade Chain Lubricant",code:"06016",p:"12 oz.",price:1200,c10:1140,c7:1080,c3:1020},
+{cat:"LPS",n:"LPS Belt Dressing Food Grade",code:"02216",p:"10 oz.",price:580,c10:551,c7:522,c3:493},
+{cat:"LPS",n:"LPS K2 NF Electronic Cleaner",code:"57016",p:"12 oz.",price:1600,c10:1520,c7:1440,c3:1360},
+{cat:"LPS",n:"LPS K2 Electronic Cleaner",code:"57116",p:"11 oz.",price:1300,c10:1235,c7:1170,c3:1105},
+{cat:"LPS",n:"LPS Anti Spatter",code:"02116",p:"13 oz.",price:450,c10:427,c7:405,c3:382},
+{cat:"LPS",n:"LPS Strong Steel Stick",code:"60159",p:"114 g.",price:450,c10:427,c7:405,c3:382},
+{cat:"LPS",n:"LPS Hand Cleaners (72 pcs.)",code:"09200",p:"72 Pcs.",price:1470,c10:1396,c7:1323,c3:1249},
+ 
+/* ===== POLYKEN (เริ่ม 15-5-69) ===== */
+{cat:"POLYKEN",n:"Polyken Pipe Primer",p:"3.78 L.",old:4100,price:4500,c10:4050,c7:3825,c5:3600,c3:3375},
+{cat:"POLYKEN",n:"Polyken Pipe Primer",p:"18.93 L.",old:19000,price:20000,c10:18000,c7:17000,c5:16000,c3:15000},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.930-35",p:"6\"X50FT",old:3800,price:4200,c10:3780,c7:3570,c5:3360,c3:3150},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.930-35",p:"4\"X50FT",old:2600,price:2900,c10:2610,c7:2465,c5:2320,c3:2175},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.930-35",p:"2\"X50FT",old:1300,price:1500,c10:1350,c7:1275,c5:1200,c3:1125},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.954-15",p:"6\"X100FT",old:3500,price:3900,c10:3510,c7:3315,c5:3120,c3:2925},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.954-15",p:"4\"X100FT",old:2200,price:2500,c10:2250,c7:2125,c5:2000,c3:1875},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.954-15",p:"2\"X100FT",old:1300,price:1400,c10:1260,c7:1190,c5:1120,c3:1050},
+{cat:"POLYKEN",n:"TAPE NO.939-125 MASTIC",p:"2\"X20FT",old:1900,price:2100,c10:1890,c7:1785,c5:1680,c3:1575},
+{cat:"POLYKEN",n:"TAPE NO.939-125 HT MASTIC (NEW)",p:"2\"X20FT",price:3000,c10:2700,c7:2550,c5:2400,c3:2250},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.980-20",p:"2\"X100FT",old:1300,price:1400,c10:1540,c7:1190,c5:1120,c3:1050,note:"ตัวเลข Com.10% ในเอกสารต้นฉบับ (1,540) สูงกว่าราคาใหม่เอง - อาจเป็นการพิมพ์ผิดจากบริษัท ควรเช็คยืนยันกับฝ่ายขายก่อนเสนอราคานี้"},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.955-20",p:"2\"X100FT",old:1300,price:1400,c10:1540,c7:1190,c5:1120,c3:1050,note:"ตัวเลข Com.10% ในเอกสารต้นฉบับ (1,540) สูงกว่าราคาใหม่เอง - อาจเป็นการพิมพ์ผิดจากบริษัท ควรเช็คยืนยันกับฝ่ายขายก่อนเสนอราคานี้"},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.980-20",p:"4\"X100FT",old:2100,price:2200,c10:1980,c7:1870,c5:1760,c3:1650},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.955-20",p:"4\"X100FT",old:2100,price:2200,c10:1980,c7:1870,c5:1760,c3:1650},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.980-20",p:"6\"X100FT",old:2500,price:3000,c10:2700,c7:2550,c5:2400,c3:2250},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.955-20",p:"6\"X100FT",old:2500,price:3000,c10:2700,c7:2550,c5:2400,c3:2250},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.980-20",p:"6\"X200FT",old:5200,price:5700,c10:5130,c7:4845,c5:4560,c3:4275},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.955-20",p:"6\"X200FT",old:5200,price:5700,c10:5130,c7:4845,c5:4560,c3:4275},
+{cat:"POLYKEN",n:"INNER TAPE (BLACK) NO.980-20",p:"4\"X200FT",old:3500,price:3900,c10:3510,c7:3315,c5:3120,c3:2925},
+{cat:"POLYKEN",n:"OUTER TAPE (WHITE) NO.955-20",p:"4\"X200FT",old:3500,price:3900,c10:3510,c7:3315,c5:3120,c3:2925},
+ 
+/* ===== SEALANT (WESSBOND/SCI/BOSTIK/SOUDAL) ===== */
+{cat:"SEALANT",n:"Wessbond Silicone Neutral",p:"300 ml/Pcs",price:135,c10:121,c7:114,c5:108,c3:101},
+{cat:"SEALANT",n:"Wessbond 100% RTV",p:"300 ml/Pcs",price:125,c10:112,c7:106,c5:100,c3:93},
+{cat:"SEALANT",n:"SCI 3800 Neutral",p:"300 ml/Pcs",price:135,c10:121,c7:114,c5:108,c3:101},
+{cat:"SEALANT",n:"SCI 1600 Silicone Neutral",p:"300 ml/Pcs",price:135,c10:121,c7:114,c5:108,c3:101},
+{cat:"SEALANT",n:"SCI 2200 100% Acetoxy",p:"300 ml/Pcs",price:125,c10:112,c7:106,c5:100,c3:93},
+{cat:"SEALANT",n:"SCI 2300 Acetoxy General Purpose",p:"300 ml/Pcs",price:105,c10:94,c7:89,c5:84,c3:78},
+{cat:"SEALANT",n:"ปืนยิงซิลิโคน/ปืนยิง PU 300ml",p:"300 ml",price:120,c10:108,c7:102,c5:96,c3:85},
+{cat:"SEALANT",n:"3DI (ACRYLIC) หลอดน้ำเงิน",p:"450 g/Pcs",price:60,c10:54,c7:50,c5:48,c3:45},
+{cat:"SEALANT",n:"3DI (ACRYLIC) หลอดแดง",p:"450 g/Pcs",price:50,c10:45,c7:42,c5:40,c3:37},
+{cat:"SEALANT",n:"BOSTIK H360 All In One",p:"600 ml/Pcs",price:350,c10:315,c7:297,c5:280,c3:262},
+{cat:"SEALANT",n:"BOSTIK SealNFlex",p:"600 ml/Pcs",price:350,c10:315,c7:297,c5:280,c3:262},
+{cat:"SEALANT",n:"ปืนยิง PU 600ml ยี่ห้อ SURFACE",p:"600 ml/Pcs",price:500,c10:450,c7:425,c5:400,c3:375},
+{cat:"SEALANT",n:"จุกยิง PU 600ml",p:"600 ml/Pcs",price:20,c10:18,c7:17,c5:16,c3:15},
+{cat:"SEALANT",n:"SONOLASTIC PU NP-1",p:"600 ml/Pcs",price:380,c10:342,c7:323,c5:304,c3:285},
+{cat:"SEALANT",n:"World Foam - Adaptor",p:"750 ml/Can",price:470,c10:423,c7:399,c5:376,c3:352},
+{cat:"SEALANT",n:"TYTAN 65 Gun Type",p:"870 ml/Can",price:620,c10:558,c7:527,c5:496,c3:465},
+{cat:"SEALANT",n:"KORI FOAM ใช้ปืน",p:"750 ml/Can",price:470,c10:423,c7:399,c5:376,c3:352},
+{cat:"SEALANT",n:"KORI FOAM",p:"500 ml/Can",price:360,c10:324,c7:306,c5:288,c3:270},
+{cat:"SEALANT",n:"FOAM CLEANER",p:"550 ml/Can",price:300,c10:270,c7:255,c5:240,c3:225},
+{cat:"SEALANT",n:"ปืนยิง TYTAN 65",p:"Pcs",price:1200,c10:1080,c7:1020,c5:960,c3:900},
+{cat:"SEALANT",n:"BOSS 350 Flame Retardant Duct Sealant",p:"300 ml/Pcs",price:250,c10:225,c7:212,c5:200,c3:187},
+{cat:"SEALANT",n:"BOSS 814 Intumescent Latex",p:"300 ml/Pcs",price:380,c10:342,c7:323,c5:304,c3:285},
+{cat:"SEALANT",n:"BOSTIK No More Nail",p:"300 ml/Pcs",price:150,c10:135,c7:127,c5:120,c3:112},
+{cat:"SEALANT",n:"SURFACE WB710",p:"600 ml/Pcs",price:210,c10:189,c7:178,c5:168,c3:157},
+{cat:"SEALANT",n:"Soudafoam 1K",p:"750 ml/Can",price:450,c10:405,c7:382,c5:360,c3:337},
+{cat:"SEALANT",n:"SOUDAL FOAM FR HY",p:"750 ml/Can",price:750,c10:675,c7:637,c5:600,c3:562},
+{cat:"SEALANT",n:"Bostik FP404 Fire Retardant PU Foam",p:"750 ml/Can",price:650,c10:585,c7:552,c5:520,c3:487},
+ 
+/* ===== FIRE BLANKET / RAPP-IT / DB828 (1/2/2567) ===== */
+{cat:"FIRE BLANKET/RAPP-IT",n:"FIRE BLANKET 4FT*4FT (1.2mX1.2m)",p:"4FT*4FT/Pcs",price:1400,c10:1260,c7:1190,c5:1120,c3:1050},
+{cat:"FIRE BLANKET/RAPP-IT",n:"FIRE BLANKET 4FT*6FT (1.2mX1.8m)",p:"4FT*6FT/Pcs",price:1900,c10:1710,c7:1615,c5:1520,c3:1425},
+{cat:"FIRE BLANKET/RAPP-IT",n:"FIRE BLANKET 6FT*6FT (1.8mX1.8m)",p:"6FT*6FT/Pcs",price:2200,c10:1980,c7:1870,c5:1760,c3:1650},
+{cat:"FIRE BLANKET/RAPP-IT",n:"Rapp-it 122",p:"3.6m*50mm/Roll",price:3600,c10:3240,c7:3060,c5:2880,c3:2700},
+{cat:"FIRE BLANKET/RAPP-IT",n:"Rapp-it 123",p:"3.6m*75mm/Roll",price:3800,c10:3420,c7:3230,c5:3040,c3:2850},
+{cat:"FIRE BLANKET/RAPP-IT",n:"Rapp-it 124",p:"3.6m*100mm/Roll",price:4100,c10:3690,c7:3485,c5:3280,c3:3075},
+{cat:"FIRE BLANKET/RAPP-IT",n:"กาว DB 828 Contact",p:"15 Kg./Gal",price:2800,c10:2520,c7:2380,c5:2240,c3:2100},
+];
+ 
+const STORE_KEY = "products-v1";
+let PRODUCTS = [];
+const catsDiv = document.getElementById('cats');
+const resultsDiv = document.getElementById('results');
+const searchInput = document.getElementById('search');
+const countEl = document.getElementById('count');
+const statusEl = document.getElementById('status');
+let activeCat = "ทั้งหมด";
+let editingId = null;
+ 
+function fmt(n){ return n==null || n==="" ? "" : Number(n).toLocaleString('en-US'); }
+function uid(){ return 'p_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+function keyOf(item){
+  const norm = s => (s||'').toString().toLowerCase().replace(/[^a-z0-9ก-๙]/g,'');
+  return item.code ? 'c:'+norm(item.code) : 'n:'+norm(item.n)+'|'+norm(item.p);
+}
+ 
+async function loadProducts(){
+  try{
+    statusEl.textContent = "กำลังโหลดข้อมูลจาก Google Sheet...";
+    const res = await fetch('/api/pricelist');
+    const apiProducts = await res.json();
+    if(apiProducts && apiProducts.length > 0){
+      PRODUCTS = apiProducts;
+      mergeNewSeedItems();
+    } else {
+      PRODUCTS = SEED_DATA.map(d=>({...d, id: uid()}));
+      await saveProducts(true);
+    }
+    statusEl.textContent = "";
+  }catch(e){
+    PRODUCTS = SEED_DATA.map(d=>({...d, id: uid()}));
+    statusEl.textContent = "";
+  }
+  renderCats();
+  render();
+}
+ 
+function mergeNewSeedItems(){
+  const existingKeys = new Set(PRODUCTS.map(keyOf));
+  let added = 0;
+  SEED_DATA.forEach(seed=>{
+    const k = keyOf(seed);
+    if(!existingKeys.has(k)){
+      PRODUCTS.push({...seed, id: uid()});
+      existingKeys.add(k);
+      added++;
+    }
+  });
+  if(added>0) saveProducts(true);
+}
+ 
+async function saveProducts(silent){
+  try{
+    if(!silent) statusEl.textContent = "กำลังบันทึกลง Google Sheet...";
+    await fetch('/api/pricelist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ products: PRODUCTS })
+    });
+    if(!silent){ statusEl.textContent = "บันทึกลง Google Sheet สำเร็จ!"; setTimeout(()=>statusEl.textContent="",2000); }
+  }catch(e){
+    statusEl.textContent = "บันทึกไม่สำเร็จ กรุณาลองใหม่";
+  }
+}
+ 
+function renderCats(){
+  const cats = ["ทั้งหมด", ...new Set(PRODUCTS.map(d=>d.cat).filter(Boolean))];
+  catsDiv.innerHTML = "";
+  cats.forEach(c=>{
+    const b = document.createElement('button');
+    b.className = 'cat-btn' + (c===activeCat?' active':'');
+    b.textContent = c;
+    b.onclick = ()=>{
+      activeCat = c;
+      document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      render();
+    };
+    catsDiv.appendChild(b);
+  });
+}
+ 
+function render(){
+  const q = searchInput.value.trim().toLowerCase();
+  let items = PRODUCTS.filter(d=>{
+    const matchesCat = activeCat==="ทั้งหมด" || d.cat===activeCat;
+    if(!matchesCat) return false;
+    if(!q) return true;
+    const hay = (d.n+" "+(d.p||"")+" "+(d.code||"")+" "+d.cat).toLowerCase();
+    return hay.includes(q);
+  });
+  countEl.textContent = items.length + " รายการ";
+  if(items.length===0){
+    resultsDiv.innerHTML = `<div class="empty">ไม่พบสินค้าที่ตรงกับ <b>"${searchInput.value}"</b><br>ลองพิมพ์ชื่อสินค้าสั้นลง หรือรหัสสินค้า<br><br>หรือกด <b>+</b> ด้านล่างเพื่อเพิ่มสินค้านี้</div>`;
+    return;
+  }
+  resultsDiv.innerHTML = items.slice(0,200).map(d=>{
+    let tiers = "";
+    if(d.c10) tiers += `<span class="tier">10% <b>${fmt(d.c10)}</b></span>`;
+    if(d.c7) tiers += `<span class="tier">7% <b>${fmt(d.c7)}</b></span>`;
+    if(d.c5) tiers += `<span class="tier">5% <b>${fmt(d.c5)}</b></span>`;
+    if(d.c3) tiers += `<span class="tier">3% <b>${fmt(d.c3)}</b></span>`;
+    const oldPrice = d.old && d.old!==d.price ? `<span class="old">${fmt(d.old)}</span>` : "";
+    const tagBlock = d.price!=null && d.price!==""
+      ? `<div class="tag">${oldPrice}<span class="price">฿${fmt(d.price)}</span></div>`
+      : `<div class="tag"><span class="missing">เช็คราคากับฝ่ายขาย</span></div>`;
+    return `<div class="card">
+      <div class="card-main">
+        <span class="cat-label">${d.cat||"ไม่ระบุหมวด"}</span>${d.code?` <span class="code">${d.code}</span>`:""}
+        <div class="name">${d.n}</div>
+        ${d.p?`<div class="meta">${d.p}</div>`:""}
+        ${tiers?`<div class="tiers">${tiers}</div>`:""}
+        ${d.note?`<div class="note">${d.note}</div>`:""}
+      </div>
+      <div class="tag-col">
+        ${tagBlock}
+        <button class="edit-btn" onclick="openModal('${d.id}')">แก้ไข</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+ 
+/* ---- Add / edit modal ---- */
+const modal = document.getElementById('modal');
+const form = document.getElementById('pform');
+const fld = name => form.elements.namedItem(name);
+function openModal(id){
+  editingId = id || null;
+  const d = id ? PRODUCTS.find(x=>x.id===id) : {};
+  fld('cat').value = d.cat || "";
+  fld('n').value = d.n || "";
+  fld('p').value = d.p || "";
+  fld('code').value = d.code || "";
+  fld('old').value = d.old ?? "";
+  fld('price').value = d.price ?? "";
+  fld('c10').value = d.c10 ?? "";
+  fld('c7').value = d.c7 ?? "";
+  fld('c5').value = d.c5 ?? "";
+  fld('c3').value = d.c3 ?? "";
+  fld('note').value = d.note || "";
+  document.getElementById('modal-title').textContent = id ? "แก้ไขสินค้า" : "เพิ่มสินค้าใหม่";
+  document.getElementById('delete-btn').style.display = id ? "block" : "none";
+  const catList = document.getElementById('cat-options');
+  catList.innerHTML = [...new Set(PRODUCTS.map(x=>x.cat).filter(Boolean))].map(c=>`<option value="${c}">`).join('');
+  modal.classList.add('open');
+  fld('n').focus();
+}
+function closeModal(){ modal.classList.remove('open'); }
+function numOrNull(v){ return v===""||v==null ? null : Number(v); }
+ 
+form.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const obj = {
+    id: editingId || uid(),
+    cat: fld('cat').value.trim() || "ไม่ระบุหมวด",
+    n: fld('n').value.trim(),
+    p: fld('p').value.trim(),
+    code: fld('code').value.trim(),
+    old: numOrNull(fld('old').value),
+    price: numOrNull(fld('price').value),
+    c10: numOrNull(fld('c10').value),
+    c7: numOrNull(fld('c7').value),
+    c5: numOrNull(fld('c5').value),
+    c3: numOrNull(fld('c3').value),
+    note: fld('note').value.trim(),
+  };
+  if(!obj.n){ return; }
+  if(editingId){
+    const idx = PRODUCTS.findIndex(x=>x.id===editingId);
+    if(idx>-1) PRODUCTS[idx] = obj;
+  } else {
+    PRODUCTS.unshift(obj);
+  }
+  await saveProducts();
+  closeModal();
+  renderCats();
+  render();
+});
+ 
+document.getElementById('delete-btn').addEventListener('click', async ()=>{
+  if(!editingId) return;
+  if(!confirm('ลบสินค้านี้?')) return;
+  PRODUCTS = PRODUCTS.filter(x=>x.id!==editingId);
+  await saveProducts();
+  closeModal();
+  renderCats();
+  render();
+});
+ 
+document.getElementById('fab').addEventListener('click', ()=>openModal(null));
+document.getElementById('modal-backdrop').addEventListener('click', closeModal);
+document.getElementById('cancel-btn').addEventListener('click', closeModal);
+ 
+searchInput.addEventListener('input', render);
+/* ---- Tabs: price lookup vs area calculator ---- */
+const tabSearch = document.getElementById('tab-search');
+const tabCalc = document.getElementById('tab-calc');
+const searchView = document.getElementById('search-view');
+const calcView = document.getElementById('calc-view');
+const fabBtn = document.getElementById('fab');
+ 
+function switchTab(which){
+  const isSearch = which === 'search';
+  tabSearch.classList.toggle('active', isSearch);
+  tabCalc.classList.toggle('active', !isSearch);
+  searchView.style.display = isSearch ? '' : 'none';
+  resultsDiv.style.display = isSearch ? '' : 'none';
+  calcView.classList.toggle('open', !isSearch);
+  fabBtn.style.display = isSearch ? '' : 'none';
+}
+tabSearch.addEventListener('click', ()=>switchTab('search'));
+tabCalc.addEventListener('click', ()=>switchTab('calc'));
+ 
+/* ---- Pipe area calculator ---- */
+const COV_KEY = "coverage-v1";
+const SEED_COVERAGE = [
+  {id:"polyken-tape-2",  brand:"Polyken Tape", size:"2 นิ้ว", unit:"ม้วน (Roll)", coverage:0.64},
+  {id:"polyken-tape-4",  brand:"Polyken Tape", size:"4 นิ้ว", unit:"ม้วน (Roll)", coverage:1.12},
+  {id:"polyken-tape-6",  brand:"Polyken Tape", size:"6 นิ้ว", unit:"ม้วน (Roll)", coverage:1.92},
+  {id:"polyken-primer",  brand:"Polyken Primer", size:"1 แกลลอน / 3.78 ลิตร", unit:"แกลลอน", coverage:40},
+  {id:"denso-tape-2",    brand:"Denso Tape", size:"2 นิ้ว", unit:"ม้วน (Roll)", coverage:0.22},
+  {id:"denso-tape-4",    brand:"Denso Tape", size:"4 นิ้ว", unit:"ม้วน (Roll)", coverage:0.44},
+  {id:"sxp-wrap-2",      brand:"SealXPert Poly Wrap", size:"2 นิ้ว", unit:"ม้วน (Roll)", coverage:0.64},
+  {id:"sxp-wrap-3",      brand:"SealXPert Poly Wrap", size:"3 นิ้ว", unit:"ม้วน (Roll)", coverage:null},
+  {id:"sxp-wrap-4",      brand:"SealXPert Poly Wrap", size:"4 นิ้ว", unit:"ม้วน (Roll)", coverage:1.12},
+  {id:"sxp-wrap-5",      brand:"SealXPert Poly Wrap", size:"5 นิ้ว", unit:"ม้วน (Roll)", coverage:null},
+  {id:"sxp-wrap-6",      brand:"SealXPert Poly Wrap", size:"6 นิ้ว", unit:"ม้วน (Roll)", coverage:1.92},
+];
+let COVERAGE = [];
+ 
+function loadCoverage(){
+  try{
+    const raw = localStorage.getItem(COV_KEY);
+    COVERAGE = raw ? JSON.parse(raw) : SEED_COVERAGE.map(c=>({...c}));
+    if(!raw) saveCoverage();
+  }catch(e){
+    COVERAGE = SEED_COVERAGE.map(c=>({...c}));
+  }
+  populateBrandSelect();
+  renderCoverageTable();
+}
+function saveCoverage(){
+  try{ localStorage.setItem(COV_KEY, JSON.stringify(COVERAGE)); }catch(e){}
+}
+ 
+const PIPE_SIZE_TABLE = [
+  {size:"1/8", pipe:0.03}, {size:"1/4", pipe:0.04}, {size:"3/8", pipe:0.05}, {size:"1/2", pipe:0.07},
+  {size:"3/4", pipe:0.08}, {size:"1", pipe:0.10}, {size:"1.1/4", pipe:0.13}, {size:"1.1/2", pipe:0.15},
+  {size:"2", pipe:0.19}, {size:"2.1/2", pipe:0.23}, {size:"3", pipe:0.28}, {size:"3.1/2", pipe:0.32},
+  {size:"4", pipe:0.36}, {size:"5", pipe:0.44}, {size:"6", pipe:0.53}, {size:"8", pipe:0.69},
+  {size:"10", pipe:0.86}, {size:"12", pipe:1.02}, {size:"14", pipe:1.12}, {size:"16", pipe:1.28},
+  {size:"18", pipe:1.44}, {size:"20", pipe:1.60}, {size:"22", pipe:1.75}, {size:"24", pipe:1.91},
+  {size:"26", pipe:2.07}, {size:"28", pipe:2.23}, {size:"30", pipe:2.39}, {size:"32", pipe:2.55},
+  {size:"34", pipe:2.71}, {size:"36", pipe:2.87}, {size:"38", pipe:3.03}, {size:"40", pipe:3.19},
+  {size:"42", pipe:3.35}, {size:"44", pipe:3.51}, {size:"46", pipe:3.67}, {size:"48", pipe:3.83},
+  {size:"50", pipe:3.99}, {size:"52", pipe:4.14}, {size:"54", pipe:4.30}, {size:"56", pipe:4.47},
+  {size:"60", pipe:4.79}, {size:"64", pipe:5.10}, {size:"66", pipe:5.42}, {size:"72", pipe:5.74},
+  {size:"80", pipe:6.38}, {size:"88", pipe:7.02}, {size:"100", pipe:7.98},
+];
+ 
+const brandSel = document.getElementById('calc-brand');
+const sizeSel = document.getElementById('calc-size');
+const pipeSizeSel = document.getElementById('calc-pipe-size');
+const lenInput = document.getElementById('calc-length');
+const calcResultDiv = document.getElementById('calc-result');
+ 
+pipeSizeSel.innerHTML = PIPE_SIZE_TABLE.map(p=>`<option value="${p.size}">${p.size}"</option>`).join('');
+ 
+function populateBrandSelect(){
+  const brands = [...new Set(COVERAGE.map(c=>c.brand))];
+  brandSel.innerHTML = brands.map(b=>`<option value="${b}">${b}</option>`).join('');
+  populateSizeSelect();
+}
+function populateSizeSelect(){
+  const items = COVERAGE.filter(c=>c.brand===brandSel.value);
+  sizeSel.innerHTML = items.map(s=>`<option value="${s.id}">${s.size}</option>`).join('');
+  runCalc();
+}
+brandSel.addEventListener('change', populateSizeSelect);
+sizeSel.addEventListener('change', runCalc);
+pipeSizeSel.addEventListener('change', runCalc);
+lenInput.addEventListener('input', runCalc);
+ 
+function renderCoverageTable(){
+  document.getElementById('coverage-table').innerHTML = COVERAGE.map(c=>`
+    <div class="cov-row">
+      <div>
+        <div class="cov-name">${c.brand} — ${c.size}</div>
+        <div class="cov-unit">ตรม. ต่อ ${c.unit}</div>
+      </div>
+      <input type="number" inputmode="decimal" step="0.01" value="${c.coverage ?? ''}" data-id="${c.id}" placeholder="กรอก">
+    </div>
+  `).join('');
+  document.querySelectorAll('#coverage-table input').forEach(inp=>{
+    inp.addEventListener('change', (e)=>{
+      const item = COVERAGE.find(c=>c.id===e.target.dataset.id);
+      item.coverage = e.target.value === '' ? null : Number(e.target.value);
+      saveCoverage();
+      runCalc();
+    });
+  });
+}
+ 
+function runCalc(){
+  const item = COVERAGE.find(c=>c.id===sizeSel.value);
+  if(!item){ calcResultDiv.innerHTML = ''; return; }
+  const pipeRow = PIPE_SIZE_TABLE.find(p=>p.size===pipeSizeSel.value);
+  const len = parseFloat(lenInput.value);
+  if(!pipeRow || !len){
+    calcResultDiv.innerHTML = `<div class="calc-warn">เลือกขนาดท่อและกรอกความยาวท่อให้ครบก่อน</div>`;
+    return;
+  }
+  const area = pipeRow.pipe * len;
+  if(item.coverage == null || item.coverage <= 0){
+    calcResultDiv.innerHTML = `
+      <div class="calc-out"><div class="line"><span>พื้นที่ท่อโดยประมาณ</span><b>${area.toFixed(2)} ตรม.</b></div></div>
+      <div class="calc-warn">ยังไม่มีข้อมูลพื้นที่คุ้มครองของ ${item.brand} ${item.size} — กรอกในตารางด้านล่างก่อนถึงจะคำนวณจำนวนที่ต้องใช้ได้</div>`;
+    return;
+  }
+  const units = Math.ceil(area / item.coverage);
+  calcResultDiv.innerHTML = `
+    <div class="calc-out">
+      <div class="line"><span>พื้นที่ท่อโดยประมาณ</span><b>${area.toFixed(2)} ตรม.</b></div>
+      <div class="line total"><span>ต้องใช้ ${item.brand} ${item.size}</span><b>${units} ${item.unit}</b></div>
+    </div>`;
+}
+ 
+loadCoverage();
+loadProducts();
+ 
+document.getElementById('reset-link').addEventListener('click', ()=>{
+  if(!confirm('โหลดราคาล่าสุดทั้งหมดใหม่? ราคาที่เคยแก้ไข/เพิ่มเองในเครื่องนี้จะถูกแทนที่ด้วยค่าตั้งต้นทั้งหมด')) return;
+  try{ localStorage.removeItem(STORE_KEY); localStorage.removeItem(COV_KEY); }catch(e){}
+  PRODUCTS = SEED_DATA.map(d=>({...d, id: uid()}));
+  saveProducts(true);
+  COVERAGE = SEED_COVERAGE.map(c=>({...c}));
+  saveCoverage();
+  renderCats();
+  render();
+  populateBrandSelect();
+  renderCoverageTable();
+  statusEl.textContent = "โหลดข้อมูลล่าสุดแล้ว";
+  setTimeout(()=>statusEl.textContent="",2000);
+});
+</script>
+</body>
+</html>
